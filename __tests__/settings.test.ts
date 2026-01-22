@@ -162,7 +162,7 @@ describe('Settings Actions', () => {
         it('should return error if username taken', async () => {
             mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: '1' } } })
             
-            const maybeSingleMock = jest.fn().mockResolvedValue({ id: '2' }) // User exists
+            const maybeSingleMock = jest.fn().mockResolvedValue({ data: { id: '2' } })
             
             mockSupabase.from.mockReturnValue({
                 select: jest.fn(() => ({
@@ -171,7 +171,8 @@ describe('Settings Actions', () => {
                             maybeSingle: maybeSingleMock
                         }))
                     }))
-                }))
+                })),
+                update: jest.fn() 
             })
 
             const result = await updateUsername('takenname')
@@ -182,13 +183,18 @@ describe('Settings Actions', () => {
     describe('updateProfileVisibility', () => {
         it('should update visibility', async () => {
             mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: '1' } } })
-            const updateMock = jest.fn().mockResolvedValue({ error: null })
+            
+            const eqMock = jest.fn().mockResolvedValue({ error: null })
+            const updateFn = jest.fn(() => ({ eq: eqMock }))
+            
             mockSupabase.from.mockReturnValue({
-                update: jest.fn(() => ({ eq: updateMock }))
+                update: updateFn
             })
 
             await updateProfileVisibility(true)
-            expect(updateMock).toHaveBeenCalledWith({ profile_visible: true })
+            
+            expect(updateFn).toHaveBeenCalledWith({ profile_visible: true })
+            expect(eqMock).toHaveBeenCalledWith('id', '1')
         })
     })
 })

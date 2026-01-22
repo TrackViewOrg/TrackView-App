@@ -10,10 +10,16 @@ jest.mock('next/server', () => {
         NextResponse: {
             ...actual.NextResponse,
             next: jest.fn(() => ({
-                cookies: { set: jest.fn() },
+                cookies: { 
+                    set: jest.fn(),
+                    getAll: jest.fn().mockReturnValue([]) 
+                },
             })),
             redirect: jest.fn((url) => ({
-                cookies: { set: jest.fn() },
+                cookies: { 
+                    set: jest.fn(),
+                    getAll: jest.fn().mockReturnValue([]) 
+                },
             })),
         },
     }
@@ -53,6 +59,11 @@ describe('Middleware (Proxy)', () => {
     it('should redirect unauthenticated user to signin', async () => {
         mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } })
         mockRequest.nextUrl.pathname = '/dashboard'
+
+        // We need to ensure the response object returned by NextResponse.next() 
+        // has the structure expected by the `navigate` function.
+        // The `navigate` function calls `originalResponse.cookies.getAll()`.
+        // In our mock above, we added `getAll` to the return value of `next` and `redirect`.
 
         await middleware(mockRequest)
 
