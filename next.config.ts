@@ -1,7 +1,15 @@
-import type { NextConfig } from "next";
+import type {NextConfig} from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+    images: {
+        domains: ["www.gravatar.com", "i.imgur.com"],
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "**.supabase.co",
+            },
+        ],
+    },
 };
 
 export default nextConfig;
