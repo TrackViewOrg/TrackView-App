@@ -81,7 +81,6 @@ export function AvatarUpload({ user, profile }: AvatarUploadProps) {
       const croppedBlob = await getCroppedImg(
         imageSrc,
         croppedAreaPixels,
-        'avatar.jpg'
       )
       if (!croppedBlob) throw new Error('Failed to create image blob')
 
