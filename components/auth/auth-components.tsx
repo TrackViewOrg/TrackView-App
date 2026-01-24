@@ -152,13 +152,13 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({
-  children,
-  formPosition = 'right',
-  quoteOverride,
-  tipOverride,
-}: AuthLayoutProps) {
+                             children,
+                             formPosition = 'right',
+                             quoteOverride,
+                             tipOverride,
+                           }: AuthLayoutProps) {
   const layoutDirection =
-    formPosition === 'left' ? 'md:flex-row-reverse' : 'md:flex-row'
+      formPosition === 'left' ? 'xl:flex-row-reverse' : 'xl:flex-row'
   const borderClass = formPosition === 'left' ? 'border-r' : 'border-l'
 
   // Lazy initialization ensures random values are set once on component creation
@@ -179,222 +179,222 @@ export function AuthLayout({
 
   const content = useMemo(() => {
     const headline = quoteOverride
-      ? typeof quoteOverride === 'string'
-        ? { id: 999, text: [quoteOverride] }
-        : quoteOverride
-      : randomValues.headline
+        ? typeof quoteOverride === 'string'
+            ? { id: 999, text: [quoteOverride] }
+            : quoteOverride
+        : randomValues.headline
 
     const tip = tipOverride || randomValues.tip
     return { headline, tip }
   }, [quoteOverride, tipOverride, randomValues])
 
   return (
-    <main
-      className={cn(
-        'font-archivo relative flex h-full w-full items-center justify-center overflow-hidden',
-        layoutDirection
-      )}
-    >
-      <ShootingStars />
-      <Logo />
-
-      <section className="z-10 hidden h-full w-5/7 flex-col justify-center px-24 md:flex">
-        <div
+      <main
           className={cn(
-            'text-foreground max-w-3xl space-y-6 transition-opacity duration-700 select-none',
-            mounted
-              ? 'animate-in fade-in slide-in-from-left-4 opacity-100'
-              : 'opacity-0'
+              'font-archivo relative flex h-full w-full items-center justify-center overflow-hidden',
+              layoutDirection
           )}
-        >
-          <blockquote className="font-serif text-8xl font-light">
-            {content.headline.text.map((part, i) => (
-              <React.Fragment key={i}>{part}</React.Fragment>
-            ))}
-          </blockquote>
-          <div className="border-primary/10 space-y-2 border-l-2 pl-3">
-            <p className="text-md text-muted-foreground max-w-lg font-light">
-              {content.tip}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section
-        className={cn(
-          'bg-background/80 z-10 flex h-full w-full flex-col justify-center px-8 py-12 backdrop-blur-sm md:w-2/5 md:px-20',
-          borderClass
-        )}
       >
-        <div className="mx-auto w-full max-w-md">{children}</div>
-      </section>
-    </main>
+        <ShootingStars />
+        <Logo />
+
+        <section className="z-10 hidden h-full xl:w-4/7 2xl:xl:w-5/7 flex-col justify-center px-24 xl:flex">
+          <div
+              className={cn(
+                  'text-foreground max-w-3xl space-y-6 transition-opacity duration-700 select-none',
+                  mounted
+                      ? 'animate-in fade-in slide-in-from-left-4 opacity-100'
+                      : 'opacity-0'
+              )}
+          >
+            <blockquote className="font-serif text-8xl font-light">
+              {content.headline.text.map((part, i) => (
+                  <React.Fragment key={i}>{part}</React.Fragment>
+              ))}
+            </blockquote>
+            <div className="border-primary/10 space-y-2 border-l-2 pl-3">
+              <p className="text-md text-muted-foreground max-w-lg font-light">
+                {content.tip}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section
+            className={cn(
+                'bg-background/80 z-10 flex h-full w-full flex-col px-8 py-12 backdrop-blur-sm xl:w-2/5 xl:px-20 overflow-y-auto',
+                borderClass
+            )}
+        >
+          <div className="mx-auto w-full max-w-xl my-auto pt-16 xl:pt-0">{children}</div>
+        </section>
+      </main>
   )
 }
 
 export function FormInputField<T extends FieldValues>({
-  control,
-  name,
-  label,
-  placeholder,
-  type = 'text',
-}: BaseFieldProps<T> & { type?: string }) {
+                                                        control,
+                                                        name,
+                                                        label,
+                                                        placeholder,
+                                                        type = 'text',
+                                                      }: BaseFieldProps<T> & { type?: string }) {
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              type={type}
-              className="h-11"
-              placeholder={placeholder}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+      <FormField
+          control={control}
+          name={name}
+          render={({ field }) => (
+              <FormItem>
+                <FormLabel>{label}</FormLabel>
+                <FormControl>
+                  <Input
+                      {...field}
+                      type={type}
+                      className="h-11"
+                      placeholder={placeholder}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+          )}
+      />
   )
 }
 
 export function PasswordWithStrength<T extends FieldValues>({
-  control,
-  name,
-  label,
-  placeholder,
-}: BaseFieldProps<T>) {
+                                                              control,
+                                                              name,
+                                                              label,
+                                                              placeholder,
+                                                            }: BaseFieldProps<T>) {
   const [showPassword, setShowPassword] = useState(false)
 
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => {
-        const strength = calculatePasswordStrength(field.value || '')
-        return (
-          <FormItem>
-            <FormLabel>{label}</FormLabel>
-            <div className="relative">
-              <FormControl>
-                <Input
-                  {...field}
-                  className="h-11"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={placeholder}
-                />
-              </FormControl>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <div className="mt-2 flex h-1 w-full gap-1">
-              {[1, 2, 3, 4, 5].map((step) => (
-                <div
-                  key={step}
-                  className={cn(
-                    'h-full flex-1 rounded-full transition-colors duration-300',
-                    step <= strength
-                      ? strength <= 2
-                        ? 'bg-destructive'
-                        : strength <= 4
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                      : 'bg-muted'
-                  )}
-                />
-              ))}
-            </div>
-            <FormMessage />
-          </FormItem>
-        )
-      }}
-    />
+      <FormField
+          control={control}
+          name={name}
+          render={({ field }) => {
+            const strength = calculatePasswordStrength(field.value || '')
+            return (
+                <FormItem>
+                  <FormLabel>{label}</FormLabel>
+                  <div className="relative">
+                    <FormControl>
+                      <Input
+                          {...field}
+                          className="h-11"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder={placeholder}
+                      />
+                    </FormControl>
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <div className="mt-2 flex h-1 w-full gap-1">
+                    {[1, 2, 3, 4, 5].map((step) => (
+                        <div
+                            key={step}
+                            className={cn(
+                                'h-full flex-1 rounded-full transition-colors duration-300',
+                                step <= strength
+                                    ? strength <= 2
+                                        ? 'bg-destructive'
+                                        : strength <= 4
+                                            ? 'bg-yellow-500'
+                                            : 'bg-green-500'
+                                    : 'bg-muted'
+                            )}
+                        />
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+            )
+          }}
+      />
   )
 }
 
 export function FormPasswordField<T extends FieldValues>({
-  control,
-  name,
-  label,
-  placeholder,
-  forgotPasswordLink,
-}: PasswordFieldProps<T>) {
+                                                           control,
+                                                           name,
+                                                           label,
+                                                           placeholder,
+                                                           forgotPasswordLink,
+                                                         }: PasswordFieldProps<T>) {
   const [showPassword, setShowPassword] = useState(false)
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <div className="flex items-center justify-between">
-            <FormLabel>{label}</FormLabel>
-            {forgotPasswordLink}
-          </div>
-          <div className="relative">
-            <FormControl>
-              <Input
-                {...field}
-                className="h-11"
-                type={showPassword ? 'text' : 'password'}
-                placeholder={placeholder}
-              />
-            </FormControl>
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+      <FormField
+          control={control}
+          name={name}
+          render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>{label}</FormLabel>
+                  {forgotPasswordLink}
+                </div>
+                <div className="relative">
+                  <FormControl>
+                    <Input
+                        {...field}
+                        className="h-11"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder={placeholder}
+                    />
+                  </FormControl>
+                  <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                <FormMessage />
+              </FormItem>
+          )}
+      />
   )
 }
 
 export function GoogleButton({
-  children,
-  onClickAction,
-}: {
+                               children,
+                               onClickAction,
+                             }: {
   children: React.ReactNode
   onClickAction?: () => void
 }) {
   return (
-    <Button
-      variant="secondary"
-      className="flex h-11 w-full gap-3"
-      type="button"
-      onClick={onClickAction}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24">
-        <path
-          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-          fill="#4285F4"
-        />
-        <path
-          d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-          fill="#34A853"
-        />
-        <path
-          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-          fill="#FBBC05"
-        />
-        <path
-          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-          fill="#EA4335"
-        />
-      </svg>
-      {children}
-    </Button>
+      <Button
+          variant="secondary"
+          className="flex h-11 w-full gap-3"
+          type="button"
+          onClick={onClickAction}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#4285F4"
+          />
+          <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853"
+          />
+          <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              fill="#FBBC05"
+          />
+          <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335"
+          />
+        </svg>
+        {children}
+      </Button>
   )
 }

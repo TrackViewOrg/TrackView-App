@@ -9,7 +9,11 @@ import {
   ExternalLinkIcon,
   Loader2Icon,
   MessageCircleQuestionMarkIcon,
+  RocketIcon,
+  Settings2Icon,
+  SlidersIcon,
   SparkleIcon,
+  ZapIcon,
 } from 'lucide-react'
 
 import {
@@ -33,22 +37,30 @@ import { settingsAccountRoute } from '@/lib/constants'
 // Configuration for plan-specific styling
 const PLAN_CONFIG: Record<
   string,
-  { label: string; className: string; iconClass: string }
+  {
+    label: string
+    className: string
+    iconClass: string
+    icon: React.ElementType
+  }
 > = {
   PLUS: {
     label: 'Manage Plan (Plus)',
     className: 'focus:bg-green-500/10 focus:text-green-500',
     iconClass: 'group-focus:text-green-500',
+    icon: Settings2Icon,
   },
   PRO: {
     label: 'Manage Plan (Pro)',
     className: 'focus:bg-purple-500/10 focus:text-purple-500',
     iconClass: 'group-focus:text-purple-500',
+    icon: Settings2Icon,
   },
   DEFAULT: {
     label: 'Upgrade Plan',
     className: '',
     iconClass: '',
+    icon: ZapIcon,
   },
 }
 
@@ -122,7 +134,7 @@ export default function TopbarAvatar(): React.ReactElement {
           className={cn(menuItemClass, planStyles.className)}
           onClick={() => subscriptionModal.open()}
         >
-          <SparkleIcon
+          <planStyles.icon
             size={14}
             className={cn('transition-colors', planStyles.iconClass)}
           />

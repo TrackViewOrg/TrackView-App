@@ -3,8 +3,8 @@ import Topbar from "@/components/dashboard/topbar/topbar";
 import LeftBar from "@/components/dashboard/leftbar/LeftBar";
 
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
+   children,
+   }: Readonly<{
     children: React.ReactNode;
 }>) {
     return (

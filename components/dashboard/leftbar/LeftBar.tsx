@@ -34,7 +34,7 @@ const nav_items = [
         icon: FolderClockIcon,
     },
     {
-        label: "Statistics",
+        label: "Stats",
         href: statisticsRoute,
         icon: TrendingUpIcon,
     },

@@ -1,0 +1,444 @@
+'use client'
+
+import * as React from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  VisibilityState,
+} from '@tanstack/react-table'
+import {
+  ClockArrowDownIcon,
+  FilterIcon,
+  MoreHorizontal,
+  TrashIcon,
+  UploadIcon,
+} from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getUserSessions, deleteSession } from '@/lib/dashboard/session'
+import { Session } from '@/types'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
+export const getShortTimeAgo = (dateInput: string) => {
+  if (!dateInput) return 'n/a'
+
+  // 1. Parse the record and force it to a UTC timestamp
+  // Input: "2026-01-24 21:37:37.986681+00" -> "2026-01-24T21:37:37.986681+00"
+  const recordDate = new Date(dateInput.replace(' ', 'T'))
+
+  // 2. Get the current time as a UTC timestamp
+  const now = new Date()
+
+  // 3. Subtract UTC milliseconds from UTC milliseconds
+  // .getTime() is independent of your computer's timezone setting.
+  const seconds = Math.floor((now.getTime() - recordDate.getTime()) / 1000)
+
+  // LOGS FOR YOU TO CHECK (Open Browser Console F12)
+  // console.log("Record (UTC):", recordDate.toUTCString());
+  // console.log("Now (UTC):", now.toUTCString());
+  // console.log("Diff Seconds:", seconds);
+
+  if (isNaN(seconds) || seconds < 0) return '0s'
+
+  const units = [
+    { label: 'y', seconds: 31536000 },
+    { label: 'mo', seconds: 2592000 },
+    { label: 'w', seconds: 604800 },
+    { label: 'd', seconds: 86400 },
+    { label: 'h', seconds: 3600 },
+    { label: 'm', seconds: 60 },
+    { label: 's', seconds: 1 },
+  ]
+
+  for (const unit of units) {
+    const interval = Math.floor(seconds / unit.seconds)
+    if (interval >= 1) {
+      return `${interval}${unit.label}`
+    }
+  }
+
+  return '0s'
+}
+
+export const formatLapTime = (seconds: number) => {
+  if (!seconds) return '00:00.000'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  const ms = Math.round((seconds - Math.floor(seconds)) * 1000)
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`
+}
+
+export default function SessionDataGrid() {
+  const [sessions, setSessions] = useState<Session[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      const { data, error } = await getUserSessions()
+      if (error) {
+        setError(error)
+      } else if (data) {
+        setSessions(data)
+      }
+    }
+    void fetchSessions()
+  }, [])
+
+  const handleDeleteClick = (sessionId: string) => {
+    setSessionToDelete(sessionId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!sessionToDelete) return
+
+    const { error } = await deleteSession(sessionToDelete)
+    if (error) {
+      console.error("Failed to delete session:", error)
+      // Optionally show an error toast here
+    } else {
+      // Remove from local state
+      setSessions((prev) => prev ? prev.filter(s => s.id !== sessionToDelete) : null)
+    }
+    setDeleteDialogOpen(false)
+    setSessionToDelete(null)
+  }
+
+  const columns: ColumnDef<Session>[] = [
+    {
+      accessorKey: 'track',
+      header: 'Track',
+      cell: ({ row }) => {
+        const track = row.original.track
+        const trackName = track?.display_name || row.original.track_id
+        const trackFlag = track?.track_flag || 'BE'
+
+        return (
+          <div className="flex items-center gap-4">
+            <div className="bg-muted/20 flex h-6.5 w-8.5 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px]">
+              <span className="text-5xl font-bold">{trackFlag}</span>
+            </div>
+            <div className="flex flex-col items-start">
+              <span className={'font-bold capitalize'}>{trackName}</span>
+              <span className={'text-muted-foreground/70 text-xs'}>
+                Unknown Configuration
+              </span>
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: 'car',
+      header: 'Car',
+      cell: ({ row }) => {
+        const car = row.original.car
+        const carName = car?.display_name || row.original.car_id
+        const carImage = car?.car_image
+
+        return (
+          <div className="flex items-center gap-4">
+            {carImage && (
+              <div className={'w-16 flex-shrink-0 overflow-hidden rounded-[4px]'}>
+                <img
+                  src={carImage}
+                  alt={'Car'}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              </div>
+            )}
+            <div className={'flex flex-col'}>
+              <span>{carName}</span>
+              <span className={'text-muted-foreground/70 text-xs'}>
+                Unknown Setup
+              </span>
+            </div>
+          </div>
+        )
+      },
+    },
+
+    {
+      header: 'Timing',
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-col items-start">
+            <span>{formatLapTime(row.original.best_lap_time)}</span>
+            <span className={'flex items-center gap-0.5 text-xs text-green-500'}>
+              <span>{row.original.gap_to_pb}</span>
+              <ClockArrowDownIcon height={12} />
+            </span>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'Standings',
+      header: 'Standing',
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-col items-start">
+            <span className={'flex'}>
+              {/* DO NOT DELETE THIS SAVE FOR FUTURE USE*/}
+              {/*<span className={'text-foreground'}>N</span>*/}
+              <span className={'text-muted-foreground'}>N/A</span>
+            </span>
+            <span className={'text-muted-foreground/70 text-xs'}>
+              {row.original.total_laps} Laps
+            </span>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: 'created_at',
+      header: () => <div className="text-right">Date</div>, // Added "Date" header text for clarity
+      cell: ({ row }) => {
+        const rawValue = row.getValue('created_at') as string
+        if (!rawValue)
+          return (
+            <div className="text-muted-foreground text-right text-sm">N/A</div>
+          )
+
+        // Standardize to ISO format for the constructor
+        const date = new Date(rawValue.replace(' ', 'T'))
+
+        if (isNaN(date.getTime())) {
+          return (
+            <div className="text-muted-foreground text-right text-sm">
+              Invalid Date
+            </div>
+          )
+        }
+
+        const formatted = new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+          timeZone: 'UTC',
+        }).format(date)
+
+        return (
+          <div className="flex flex-col items-end text-right">
+            <span className="font-medium">{getShortTimeAgo(formatted)} ago</span>
+            <span className="text-muted-foreground/70 text-xs">{formatted}</span>
+          </div>
+        )
+      },
+    },
+    {
+      id: 'actions',
+      enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="rounded-sm p-0.5">
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="group hover:bg-destructive/10 hover:text-destructive focus:text-destructive-foreground w-full justify-start gap-2 rounded-[3px] transition-colors focus:bg-red-500/20"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteClick(row.original.id)
+                    }}
+                  >
+                    <TrashIcon className="group-hover:text-destructive group-focus:text-destructive-foreground h-4 w-4 transition-colors" />
+                    <span>Delete</span>
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )
+      },
+    },
+  ]
+
+  const table = useReactTable({
+    data: sessions || [],
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+    },
+  })
+
+  if (error) {
+    return <div>Error: {error}</div>
+  }
+
+  return (
+    <div className="w-full space-y-2">
+      <div className={`${sessions && 'border-border/50 border'} rounded-xs`}>
+        {sessions ? (
+          <Table>
+            <TableHeader className={'bg-muted/50 hover:bg-muted/50'}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className={'hover:bg-transparent'}
+                >
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    onClick={() =>
+                      router.push(`${pathname}/${row.original.id}`)
+                    }
+                    className="hover:bg-muted/20 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    You Dont Have Any Sessions Yet
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-11/12" />
+            <Skeleton className="h-5 w-4/7" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
+      </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              session and remove the data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-sm"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
