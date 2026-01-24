@@ -16,8 +16,10 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 import {
+  ArrowDownUpIcon,
   ClockArrowDownIcon,
   FilterIcon,
+  ListFilter,
   MoreHorizontal,
   TrashIcon,
   UploadIcon,
@@ -26,11 +28,16 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -150,10 +157,40 @@ export default function SessionDataGrid() {
     setSessionToDelete(null)
   }
 
+  const uniqueCars = React.useMemo(() => {
+    if (!sessions) return []
+    const cars = new Map()
+    sessions.forEach(session => {
+        if (session.car) {
+            cars.set(session.car.id, session.car)
+        }
+    })
+    return Array.from(cars.values())
+  }, [sessions])
+
+  const uniqueTracks = React.useMemo(() => {
+    if (!sessions) return []
+    const tracks = new Map()
+    sessions.forEach(session => {
+        if (session.track) {
+            tracks.set(session.track.id, session.track)
+        }
+    })
+    return Array.from(tracks.values())
+  }, [sessions])
+
   const columns: ColumnDef<Session>[] = [
     {
       accessorKey: 'track',
       header: 'Track',
+      filterFn: (row, id, value) => {
+        const track = row.original.track
+        if (!track) return false
+        if (Array.isArray(value) && value.length > 0) {
+            return value.includes(track.id)
+        }
+        return true
+      },
       cell: ({ row }) => {
         const track = row.original.track
         const trackName = track?.display_name || row.original.track_id
@@ -177,6 +214,14 @@ export default function SessionDataGrid() {
     {
       accessorKey: 'car',
       header: 'Car',
+      filterFn: (row, id, value) => {
+        const car = row.original.car
+        if (!car) return false
+        if (Array.isArray(value) && value.length > 0) {
+            return value.includes(car.id)
+        }
+        return true
+      },
       cell: ({ row }) => {
         const car = row.original.car
         const carName = car?.display_name || row.original.car_id
@@ -208,6 +253,7 @@ export default function SessionDataGrid() {
     },
 
     {
+      accessorKey: 'best_lap_time',
       header: 'Timing',
       cell: ({ row }) => {
         return (
@@ -331,12 +377,178 @@ export default function SessionDataGrid() {
     },
   })
 
+  const isSortedBy = (id: string, desc: boolean) => {
+      return sorting.some(s => s.id === id && s.desc === desc)
+  }
+
+  const toggleSort = (id: string, desc: boolean) => {
+      setSorting(current => {
+          if (isSortedBy(id, desc)) {
+              return []
+          }
+          return [{ id, desc }]
+      })
+  }
+
+  const resetAll = () => {
+      setSorting([])
+      table.resetColumnFilters()
+  }
+
   if (error) {
     return <div>Error: {error}</div>
   }
 
   return (
     <div className="w-full space-y-2">
+      <div className="flex items-center justify-start">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="border-border/40 h-8 gap-2 border"
+            >
+              <ListFilter className="h-3.5 w-3.5" />
+              <span>Filters</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-0.5 font-light !text-foreground/80 !text-md"
+          >
+            <DropdownMenuLabel
+              className={
+                '!text-muted-foreground flex items-center gap-2 text-xs'
+              }
+            >
+              <ArrowDownUpIcon size={14} />
+              <h1>Sort By</h1>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={isSortedBy('created_at', true)}
+              onCheckedChange={() => toggleSort('created_at', true)}
+            >
+              Date (Newest)
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={isSortedBy('created_at', false)}
+              onCheckedChange={() => toggleSort('created_at', false)}
+            >
+              Date (Oldest)
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={isSortedBy('best_lap_time', false)}
+              onCheckedChange={() => toggleSort('best_lap_time', false)}
+            >
+              Best Lap (Fastest)
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={isSortedBy('best_lap_time', true)}
+              onCheckedChange={() => toggleSort('best_lap_time', true)}
+            >
+              Best Lap (Slowest)
+            </DropdownMenuCheckboxItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel
+              className={
+                '!text-muted-foreground flex items-center gap-2 text-xs'
+              }
+            >
+              <FilterIcon size={14} />
+              <h1>Filter By</h1>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Car</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-1">
+                {uniqueCars.map((car) => {
+                  const isSelected = (
+                    table.getColumn('car')?.getFilterValue() as string[]
+                  )?.includes(car.id)
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={car.id}
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        const current =
+                          (table
+                            .getColumn('car')
+                            ?.getFilterValue() as string[]) || []
+                        const newFilter = checked
+                          ? [...current, car.id]
+                          : current.filter((id) => id !== car.id)
+                        table
+                          .getColumn('car')
+                          ?.setFilterValue(
+                            newFilter.length ? newFilter : undefined
+                          )
+                      }}
+                    >
+                      {car.display_name}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+                {uniqueCars.length === 0 && (
+                  <div className="text-muted-foreground p-2 text-sm">
+                    No cars available
+                  </div>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Track</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-0.5">
+                {uniqueTracks.map((track) => {
+                  const isSelected = (
+                    table.getColumn('track')?.getFilterValue() as string[]
+                  )?.includes(track.id)
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={track.id}
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        const current =
+                          (table
+                            .getColumn('track')
+                            ?.getFilterValue() as string[]) || []
+                        const newFilter = checked
+                          ? [...current, track.id]
+                          : current.filter((id) => id !== track.id)
+                        table
+                          .getColumn('track')
+                          ?.setFilterValue(
+                            newFilter.length ? newFilter : undefined
+                          )
+                      }}
+                    >
+                      {track.display_name}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+                {uniqueTracks.length === 0 && (
+                  <div className="text-muted-foreground p-2 text-sm">
+                    No tracks available
+                  </div>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={resetAll}
+              disabled={sorting.length === 0 && columnFilters.length === 0}
+            >
+              Reset All
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className={`${sessions && 'border-border/50 border'} rounded-xs`}>
         {sessions ? (
           <Table>
@@ -383,7 +595,7 @@ export default function SessionDataGrid() {
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center text-muted-foreground"
+                    className="text-muted-foreground h-24 text-center"
                   >
                     You Dont Have Any Sessions Yet
                   </TableCell>
