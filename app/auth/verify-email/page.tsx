@@ -1,13 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, CircleQuestionMark } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import ShootingStars from '@/components/StarBackground'
 import { cn } from '@/lib/utils'
 import Logo from '@/components/LogoAnimated'
-import { SupportDialog } from '@/components/dashboard/SupportDialog'
-import { signout } from '@/lib/auth/actions'
+import Link from 'next/link'
+import { privacyRoute, termsRoute } from '@/lib/constants'
 
 // --- CONTENT CONSTANTS ---
 
@@ -78,28 +76,21 @@ export default function RegistrationSuccessPage() {
               dashboard.
             </p>
           </div>
-
-          {/* Simple Back Action */}
-          <footer className="text-muted-foreground flex w-full items-center justify-between pt-6 text-center text-sm">
-            <Button
-              variant="link"
-              type="button"
-              className="group text-muted-foreground hover:text-foreground px-0 hover:bg-transparent"
-              onClick={() => signout()}
-            >
-              <ArrowLeft />
-              Return to Login
-            </Button>
-            <SupportDialog>
-              <Button
-                variant="link"
-                type="button"
-                className="group text-muted-foreground hover:text-foreground px-0 hover:bg-transparent"
-              >
-                <CircleQuestionMark />
-                Request Support
-              </Button>
-            </SupportDialog>
+          <footer
+            className={
+              'text-muted-foreground/50 flex w-full items-center justify-center gap-5 !px-0 pt-5 text-center text-xs'
+            }
+          >
+            <span className="">
+              <Link href={termsRoute} className="">
+                Terms Of Service
+              </Link>
+            </span>
+            <span className="">
+              <Link href={privacyRoute} className="">
+                Privacy Policy
+              </Link>
+            </span>
           </footer>
         </div>
       </div>

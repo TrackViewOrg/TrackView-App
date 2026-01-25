@@ -16,7 +16,12 @@ import {
 } from '@/components/auth/auth-components'
 import { handleGoogleLogin, signin } from '@/lib/auth/actions'
 import { SupportDialog } from '@/components/dashboard/SupportDialog'
-import { forgotPasswordRoute, signupRoute } from '@/lib/constants'
+import {
+  forgotPasswordRoute,
+  privacyRoute,
+  signupRoute,
+  termsRoute,
+} from '@/lib/constants'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -113,13 +118,13 @@ export default function LoginPage() {
 
         <footer
           className={
-            'text-muted-foreground flex items-center justify-between text-center text-sm'
+            'text-muted-foreground flex w-full items-center justify-between !px-0 text-center text-sm'
           }
         >
           <SupportDialog>
             <Button
               variant="link"
-              className="group text-muted-foreground hover:text-foreground hover:bg-transparent"
+              className="group text-muted-foreground hover:text-foreground !m-0 !p-0 hover:bg-transparent"
             >
               <CircleQuestionMark />
               Request Support
@@ -132,6 +137,22 @@ export default function LoginPage() {
               className="text-primary font-medium hover:underline"
             >
               Sign up
+            </Link>
+          </span>
+        </footer>
+        <footer
+          className={
+            'text-muted-foreground/50 flex w-full items-center justify-between !px-0 text-center text-xs'
+          }
+        >
+          <span className="">
+            <Link href={termsRoute} className="">
+              Terms Of Service
+            </Link>
+          </span>
+          <span className="">
+            <Link href={privacyRoute} className="">
+              Privacy Policy
             </Link>
           </span>
         </footer>

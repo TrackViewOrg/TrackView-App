@@ -8,6 +8,8 @@
 export const homeRoute = '/'
 
 // Authentication routes
+export const privacyRoute = '/legal/privacy'
+export const termsRoute = '/legal/terms'
 export const signinRoute = '/auth/signin'
 export const signupRoute = '/auth/signup'
 export const authRoute = '/auth'

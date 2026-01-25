@@ -18,7 +18,7 @@ import Link from 'next/link'
 import { handleGoogleLogin, handleSignup } from '@/lib/auth/actions'
 import { SupportDialog } from '@/components/dashboard/SupportDialog'
 import { CircleQuestionMark } from 'lucide-react'
-import { signinRoute } from '@/lib/constants'
+import { privacyRoute, signinRoute, termsRoute } from '@/lib/constants'
 import { toast } from 'sonner'
 
 // 1. Schema reduced to essential inputs
@@ -135,7 +135,7 @@ export default function SignUpPage() {
           <SupportDialog>
             <Button
               variant="link"
-              className="group text-muted-foreground hover:text-foreground hover:bg-transparent"
+              className="group text-muted-foreground hover:text-foreground !m-0 !p-0 hover:bg-transparent"
             >
               <CircleQuestionMark />
               Request Support
@@ -148,6 +148,23 @@ export default function SignUpPage() {
               className="text-primary font-medium hover:underline"
             >
               Sign in
+            </Link>
+          </span>
+        </footer>
+
+        <footer
+          className={
+            'text-muted-foreground/50 flex w-full items-center justify-between !px-0 text-center text-xs'
+          }
+        >
+          <span className="">
+            <Link href={termsRoute} className="">
+              Terms Of Service
+            </Link>
+          </span>
+          <span className="">
+            <Link href={privacyRoute} className="">
+              Privacy Policy
             </Link>
           </span>
         </footer>
