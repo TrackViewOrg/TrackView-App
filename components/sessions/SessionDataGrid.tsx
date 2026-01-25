@@ -24,7 +24,9 @@ import {
   ListFilter,
   Loader2,
   MoreHorizontal,
+  RotateCcw,
   TrashIcon,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -378,7 +380,7 @@ export default function SessionDataGrid() {
         }
         return true
       },
-      cell: ({ row }) => {
+      cell: () => {
         // This column is hidden but used for filtering
         return null
       },
@@ -501,29 +503,24 @@ export default function SessionDataGrid() {
 
   return (
     <div className="w-full space-y-2">
-      <div className="flex items-center justify-start">
+      <div className="flex flex-wrap items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="secondary"
+              variant="default"
               size="sm"
-              className="border-border/40 h-8 gap-2 border"
+              className="h-8 gap-2 border-dashed"
             >
-              <ListFilter className="h-3.5 w-3.5" />
-              <span>Filters</span>
+              <ArrowDownUpIcon className="h-3.5 w-3.5" />
+              Sort
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="bg-muted border-border/50 !text-foreground/80 !text-md m-0 gap-0 rounded-sm px-0.5 font-light"
+            className="bg-muted border-border/30 w-48 rounded-sm border p-0.5"
           >
-            <DropdownMenuLabel
-              className={
-                '!text-muted-foreground flex items-center gap-2 text-xs'
-              }
-            >
-              <ArrowDownUpIcon size={14} />
-              <h1>Sort By</h1>
+            <DropdownMenuLabel className={'text-muted-foreground !text-xs'}>
+              Sort by
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
@@ -538,126 +535,210 @@ export default function SessionDataGrid() {
             >
               Date (Oldest)
             </DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
               checked={isSortedBy('best_lap_time', false)}
               onCheckedChange={() => toggleSort('best_lap_time', false)}
             >
-              Best Lap (Fastest)
+              Lap Time (Fastest)
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={isSortedBy('best_lap_time', true)}
               onCheckedChange={() => toggleSort('best_lap_time', true)}
             >
-              Best Lap (Slowest)
+              Lap Time (Slowest)
             </DropdownMenuCheckboxItem>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel
-              className={
-                '!text-muted-foreground flex items-center gap-2 text-xs'
-              }
-            >
-              <FilterIcon size={14} />
-              <h1>Filter By</h1>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-
-            <DropdownMenuCheckboxItem
-              checked={table.getColumn('bookmarked')?.getFilterValue() === true}
-              onCheckedChange={(checked) => {
-                table
-                  .getColumn('bookmarked')
-                  ?.setFilterValue(checked ? true : undefined)
-              }}
-            >
-              Bookmarked Only
-            </DropdownMenuCheckboxItem>
-
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Car</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-1">
-                {uniqueCars.map((car) => {
-                  const isSelected = (
-                    table.getColumn('car')?.getFilterValue() as string[]
-                  )?.includes(car.id)
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={car.id}
-                      checked={isSelected}
-                      onCheckedChange={(checked) => {
-                        const current =
-                          (table
-                            .getColumn('car')
-                            ?.getFilterValue() as string[]) || []
-                        const newFilter = checked
-                          ? [...current, car.id]
-                          : current.filter((id) => id !== car.id)
-                        table
-                          .getColumn('car')
-                          ?.setFilterValue(
-                            newFilter.length ? newFilter : undefined
-                          )
-                      }}
-                    >
-                      {car.display_name}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-                {uniqueCars.length === 0 && (
-                  <div className="text-muted-foreground p-2 text-sm">
-                    No cars available
-                  </div>
-                )}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Track</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-0.5">
-                {uniqueTracks.map((track) => {
-                  const isSelected = (
-                    table.getColumn('track')?.getFilterValue() as string[]
-                  )?.includes(track.id)
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={track.id}
-                      checked={isSelected}
-                      onCheckedChange={(checked) => {
-                        const current =
-                          (table
-                            .getColumn('track')
-                            ?.getFilterValue() as string[]) || []
-                        const newFilter = checked
-                          ? [...current, track.id]
-                          : current.filter((id) => id !== track.id)
-                        table
-                          .getColumn('track')
-                          ?.setFilterValue(
-                            newFilter.length ? newFilter : undefined
-                          )
-                      }}
-                    >
-                      {track.display_name}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-                {uniqueTracks.length === 0 && (
-                  <div className="text-muted-foreground p-2 text-sm">
-                    No tracks available
-                  </div>
-                )}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={resetAll}
-              disabled={sorting.length === 0 && columnFilters.length === 0}
-            >
-              Reset All
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 gap-2 border-dashed"
+            >
+              <FilterIcon className="h-3.5 w-3.5" />
+              Track
+              {(table.getColumn('track')?.getFilterValue() as string[])
+                ?.length > 0 && (
+                <span className="bg-muted rounded-inner ml-1 px-1 text-[10px] font-normal">
+                  {
+                    (table.getColumn('track')?.getFilterValue() as string[])
+                      ?.length
+                  }
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-muted border-border/30 w-48 rounded-sm border p-0.5"
+          >
+            <DropdownMenuLabel className={'text-muted-foreground !text-xs'}>
+              Filter by Track
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {uniqueTracks.length > 0 ? (
+              uniqueTracks.map((track) => {
+                const isSelected = (
+                  table.getColumn('track')?.getFilterValue() as string[]
+                )?.includes(track.id)
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={track.id}
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      const current =
+                        (table
+                          .getColumn('track')
+                          ?.getFilterValue() as string[]) || []
+                      const newFilter = checked
+                        ? [...current, track.id]
+                        : current.filter((id) => id !== track.id)
+                      table
+                        .getColumn('track')
+                        ?.setFilterValue(
+                          newFilter.length ? newFilter : undefined
+                        )
+                    }}
+                  >
+                    {track.display_name}
+                  </DropdownMenuCheckboxItem>
+                )
+              })
+            ) : (
+              <div className="text-muted-foreground p-2 text-sm">
+                No tracks available
+              </div>
+            )}
+            {(table.getColumn('track')?.getFilterValue() as string[])?.length >
+              0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() =>
+                    table.getColumn('track')?.setFilterValue(undefined)
+                  }
+                  className="justify-center text-center"
+                >
+                  Clear filters
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 gap-2 border-dashed"
+            >
+              <FilterIcon className="h-3.5 w-3.5" />
+              Car
+              {(table.getColumn('car')?.getFilterValue() as string[])?.length >
+                0 && (
+                <span className="bg-muted rounded-inner ml-1 px-1 text-[10px] font-normal">
+                  {
+                    (table.getColumn('car')?.getFilterValue() as string[])
+                      ?.length
+                  }
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="bg-muted border-border/30 w-48 rounded-sm border p-0.5"
+          >
+            <DropdownMenuLabel className={'text-muted-foreground !text-xs'}>
+              Filter by Car
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {uniqueCars.length > 0 ? (
+              uniqueCars.map((car) => {
+                const isSelected = (
+                  table.getColumn('car')?.getFilterValue() as string[]
+                )?.includes(car.id)
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={car.id}
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      const current =
+                        (table
+                          .getColumn('car')
+                          ?.getFilterValue() as string[]) || []
+                      const newFilter = checked
+                        ? [...current, car.id]
+                        : current.filter((id) => id !== car.id)
+                      table
+                        .getColumn('car')
+                        ?.setFilterValue(
+                          newFilter.length ? newFilter : undefined
+                        )
+                    }}
+                  >
+                    {car.display_name}
+                  </DropdownMenuCheckboxItem>
+                )
+              })
+            ) : (
+              <div className="text-muted-foreground p-2 text-sm">
+                No cars available
+              </div>
+            )}
+            {(table.getColumn('car')?.getFilterValue() as string[])?.length >
+              0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() =>
+                    table.getColumn('car')?.setFilterValue(undefined)
+                  }
+                  className="justify-center text-center"
+                >
+                  Clear filters
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          variant={
+            table.getColumn('bookmarked')?.getFilterValue() === true
+              ? 'accent'
+              : 'default'
+          }
+          size="sm"
+          className="border-border/0 transiotion-all h-8 gap-2 border-1 duration-200"
+          onClick={() => {
+            const current =
+              table.getColumn('bookmarked')?.getFilterValue() === true
+            table
+              .getColumn('bookmarked')
+              ?.setFilterValue(current ? undefined : true)
+          }}
+        >
+          <BookmarkIcon
+            className={`h-4 w-4 ${table.getColumn('bookmarked')?.getFilterValue() === true ? 'fill-current' : ''}`}
+          />
+          Bookmarked
+        </Button>
+
+        {(sorting.length > 0 || columnFilters.length > 0) && (
+          <Button
+            variant="ghost"
+            onClick={resetAll}
+            className="flex h-8 !gap-2 !px-2"
+          >
+            <RotateCcw className="ml-2 h-4 w-2" />
+            <h1>Reset</h1>
+          </Button>
+        )}
       </div>
 
       <div className={`${sessions && 'border-border/50 border'} rounded-xs`}>
