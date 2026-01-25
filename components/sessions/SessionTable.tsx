@@ -34,11 +34,11 @@ export function SessionTable({
     <div className={`${sessions && 'border-border/50 border'} rounded-xs`}>
       {sessions ? (
         <Table>
-          <TableHeader className={'bg-muted/50 hover:bg-muted/50'}>
+          <TableHeader className={'bg-muted hover:bg-muted'}>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className={'hover:bg-transparent'}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="first:pl-3 last:pr-3">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -59,14 +59,14 @@ export function SessionTable({
                     isDeletingId !== row.original.id &&
                     router.push(`${pathname}/${row.original.id}`)
                   }
-                  className={`hover:bg-muted/20 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200 ${
+                  className={`hover:bg-muted/40 bg-muted/60 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200 ${
                     isDeletingId === row.original.id
                       ? 'bg-muted/10 pointer-events-none opacity-20'
                       : ''
                   }`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="first:pl-3 last:pr-3">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -41,6 +41,50 @@ export async function getUserSessions() {
 }
 
 /**
+ * Fetches a single session by ID.
+ *
+ * @param sessionId - The UUID of the session.
+ * @returns Object containing session data or an error message.
+ */
+export async function getSessionById(sessionId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .single()
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { data }
+}
+
+/**
+ * Fetches laps for a specific session.
+ *
+ * @param sessionId - The UUID of the session.
+ * @returns Object containing laps data or an error message.
+ */
+export async function getSessionLaps(sessionId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('laps')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('lap_number', { ascending: true })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { data }
+}
+
+/**
  * Deletes a specific session and its associated telemetry files from storage.
  *
  * @param sessionId - The UUID of the session to delete.

@@ -15,6 +15,14 @@ import {
 import TrackViewIcon from '@/components/TrackViewIcon'
 import { homeRoute } from '@/lib/constants'
 
+// Helper: Detect if a segment is an ID (UUID or generic long ID)
+const isIdSegment = (segment: string) => {
+  const uuidRegex =
+    /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/
+  // Checks for UUID OR long string mixed with numbers (e.g. MongoDB ID)
+  return uuidRegex.test(segment) || (segment.length > 12 && /\d/.test(segment))
+}
+
 // Helper: Formats URL segments (e.g., "track-analysis" -> "Track Analysis")
 const formatPathTitle = (segment: string) => {
   return segment
@@ -24,7 +32,6 @@ const formatPathTitle = (segment: string) => {
 
 export default function TopbarBreadcrumb() {
   const pathname = usePathname()
-  // Generate segments, filtering out empty strings caused by leading slashes
   const segments = pathname.split('/').filter((item) => item !== '')
 
   return (
@@ -44,6 +51,22 @@ export default function TopbarBreadcrumb() {
           const isLast = index === segments.length - 1
           const href = `/${segments.slice(0, index + 1).join('/')}`
 
+          const isId = isIdSegment(segment)
+
+          // 1. If it's an ID in the middle of the path (e.g. /sessions/[id]/settings), SKIP IT.
+          //    This creates the "Sessions / Settings" effect.
+          if (isId && !isLast) {
+            return null
+          }
+
+          // 2. Determine Display Name
+          let displayName = formatPathTitle(segment)
+
+          // 3. If it's an ID and it IS the last item, rename to "Overview"
+          if (isId && isLast) {
+            displayName = 'Overview'
+          }
+
           return (
             <React.Fragment key={href}>
               <BreadcrumbSeparator>
@@ -53,11 +76,11 @@ export default function TopbarBreadcrumb() {
               <BreadcrumbItem className={'select-none'}>
                 {isLast ? (
                   <BreadcrumbPage className={'font-semibold'}>
-                    {formatPathTitle(segment)}
+                    {displayName}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link href={href}>{formatPathTitle(segment)}</Link>
+                    <Link href={href}>{displayName}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

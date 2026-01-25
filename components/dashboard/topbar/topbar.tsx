@@ -33,7 +33,7 @@ function Topbar() {
         size={'sm'}
         onClick={() => subscriptionModal.open()}
         className={
-          'group hover:text-background flex h-7 gap-2 bg-[#dff976]/30 px-3 text-xs font-bold text-[#dff976]/90 transition-all duration-400 hover:bg-[#dff976]'
+          'group hover:text-background flex h-7 gap-2 bg-[#dff976]/40 px-3 text-xs font-bold text-[#dff976] transition-all duration-400 hover:bg-[#dff976]'
         }
       >
         <ZapIcon className={'group-hover h-3.5 w-3.5'} />
