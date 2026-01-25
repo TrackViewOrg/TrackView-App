@@ -1,12 +1,12 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { useForm } from 'react-hook-form'
 import { Form } from '@/components/ui/form'
 import {
-  PasswordWithStrength,
-  FormPasswordField,
   FormInputField,
+  FormPasswordField,
+  PasswordWithStrength,
 } from '@/components/auth/auth-components'
 
 // Mock components that might cause issues in testing environment

@@ -1,15 +1,15 @@
 'use client'
 
-import React, { useState, useRef, ChangeEvent } from 'react'
+import React, { ChangeEvent, useRef, useState } from 'react'
 import Cropper, { Area } from 'react-easy-crop'
 import { createClient } from '@/lib/supabase/client'
 import { getCroppedImg } from '@/lib/canvas-utils' // The utility from previous step
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -78,10 +78,7 @@ export function AvatarUpload({ user, profile }: AvatarUploadProps) {
     setLoading(true)
     try {
       // A. Create Blob from Canvas
-      const croppedBlob = await getCroppedImg(
-        imageSrc,
-        croppedAreaPixels,
-      )
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
       if (!croppedBlob) throw new Error('Failed to create image blob')
 
       const fileExt = 'jpeg'

@@ -4,15 +4,23 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import {
+  callbackRoute,
   dashRoute,
   signinRoute,
+  updatePasswordRoute,
   verifyEmailRoute,
   verifyMfaRoute,
-  updatePasswordRoute,
-  callbackRoute,
 } from '@/lib/constants'
 import { cookies } from 'next/headers'
 
+/**
+ * Handles user sign-in with email and password.
+ * Checks for MFA enrollment and redirects accordingly.
+ *
+ * @param email - User's email address.
+ * @param password - User's password.
+ * @returns Redirects to dashboard or MFA verification page, or returns an error object.
+ */
 export async function signin(email: string, password: string) {
   const supabase = await createClient()
 
@@ -49,6 +57,10 @@ export async function signin(email: string, password: string) {
   redirect(dashRoute)
 }
 
+/**
+ * Initiates Google OAuth login flow.
+ * Redirects the user to Google's consent screen.
+ */
 export const handleGoogleLogin = async () => {
   const supabase = await createClient()
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
@@ -74,6 +86,13 @@ export const handleGoogleLogin = async () => {
   }
 }
 
+/**
+ * Handles new user registration.
+ * Creates a new user account and sends a verification email.
+ *
+ * @param formData - Object containing email, password, and username.
+ * @returns Redirects to email verification page or returns an error object.
+ */
 export async function handleSignup(formData: {
   email: string
   password: string
@@ -103,6 +122,9 @@ export async function handleSignup(formData: {
   redirect(verifyEmailRoute)
 }
 
+/**
+ * Signs out the current user and redirects to the sign-in page.
+ */
 export async function signout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
@@ -110,6 +132,12 @@ export async function signout() {
   redirect(signinRoute)
 }
 
+/**
+ * Verifies the Time-based One-Time Password (TOTP) for MFA login.
+ *
+ * @param formData - FormData containing the 'code' and optionally 'next' URL.
+ * @returns Redirects to the destination URL or returns an error object.
+ */
 export async function verifyOtpForLogin(formData: FormData) {
   const supabase = await createClient()
   const code = formData.get('code') as string
@@ -169,6 +197,14 @@ export async function verifyOtpForLogin(formData: FormData) {
 
   redirect(finalDestination)
 }
+
+/**
+ * Initiates the password reset flow.
+ * Sends a password reset email to the user.
+ *
+ * @param email - The email address to send the reset link to.
+ * @returns Success message or error object.
+ */
 export const handleForgotPassword = async (email: string) => {
   const supabase = await createClient()
 
@@ -187,6 +223,13 @@ export const handleForgotPassword = async (email: string) => {
   return { success: 'Check your email for the reset link!' }
 }
 
+/**
+ * Updates the user's password.
+ * Should be called after the user has authenticated via a reset link or existing session.
+ *
+ * @param password - The new password.
+ * @returns Success object or error object.
+ */
 export async function updatePasswordAction(password: string) {
   const supabase = await createClient()
 

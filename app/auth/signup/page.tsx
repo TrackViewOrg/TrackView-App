@@ -11,8 +11,8 @@ import {
   AuthLayout,
   FormInputField,
   FormPasswordField,
-  PasswordWithStrength,
   GoogleButton,
+  PasswordWithStrength,
 } from '@/components/auth/auth-components'
 import Link from 'next/link'
 import { handleGoogleLogin, handleSignup } from '@/lib/auth/actions'

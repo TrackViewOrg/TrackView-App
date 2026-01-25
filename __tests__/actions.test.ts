@@ -1,11 +1,11 @@
 import {
-  signin,
-  handleSignup,
-  signout,
-  verifyOtpForLogin,
   handleForgotPassword,
-  updatePasswordAction,
   handleGoogleLogin,
+  handleSignup,
+  signin,
+  signout,
+  updatePasswordAction,
+  verifyOtpForLogin,
 } from '@/lib/auth/actions'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'

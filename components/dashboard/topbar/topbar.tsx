@@ -1,4 +1,4 @@
-"use client"
+'use client'
 import React from 'react'
 import TopbarAvatar from '@/components/dashboard/topbar/topbarAvatar'
 import TopbarBreadcrumb from '@/components/dashboard/topbar/topbarBreadcrumb'
@@ -7,7 +7,6 @@ import {
   BellIcon,
   DownloadIcon,
   MessageCircleQuestionMarkIcon,
-  SparkleIcon,
   ZapIcon,
 } from 'lucide-react'
 import { SupportDialog } from '@/components/dashboard/SupportDialog'
@@ -19,7 +18,6 @@ import {
 import { useSubscriptionModal } from '@/lib/hooks/subscription'
 
 function Topbar() {
-
   const subscriptionModal = useSubscriptionModal()
 
   return (
@@ -35,7 +33,7 @@ function Topbar() {
         size={'sm'}
         onClick={() => subscriptionModal.open()}
         className={
-          'group flex h-7 gap-2 bg-[#dff976]/30 px-3 text-xs font-bold text-[#dff976]/90 hover:text-background hover:bg-[#dff976] transition-all duration-400'
+          'group hover:text-background flex h-7 gap-2 bg-[#dff976]/30 px-3 text-xs font-bold text-[#dff976]/90 transition-all duration-400 hover:bg-[#dff976]'
         }
       >
         <ZapIcon className={'group-hover h-3.5 w-3.5'} />

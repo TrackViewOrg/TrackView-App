@@ -1,9 +1,7 @@
 import React from 'react'
 
 function AccountSettingsPage() {
-    return (
-        <div>AccountSettingsPage</div>
-    )
+  return <div>AccountSettingsPage</div>
 }
 
 export default AccountSettingsPage

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { format } from 'date-fns'
 import {
@@ -15,22 +15,22 @@ import {
 import { Button } from '@/components/ui/button'
 import { ActionButton } from '@/components/dashboard/settings/ActionButton'
 import {
-  Smartphone,
+  ArrowRight,
+  Check,
+  Copy,
   Loader2,
   Plus,
-  Trash2,
-  Copy,
-  Check,
-  ArrowRight,
   ShieldCheck,
+  Smartphone,
+  Trash2,
 } from 'lucide-react'
 import {
-  enrollMFA,
-  verifyAndEnableMFA,
-  getMFAFactors,
   deleteFactor,
-  verifyExistingFactor,
+  enrollMFA,
   type Factor,
+  getMFAFactors,
+  verifyAndEnableMFA,
+  verifyExistingFactor,
 } from '@/lib/auth/settings'
 import {
   InputOTP,

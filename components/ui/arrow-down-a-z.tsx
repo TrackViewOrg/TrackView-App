@@ -1,26 +1,26 @@
-"use client";
+'use client'
 
-import type { Transition, Variants } from "motion/react";
-import { motion, useAnimation } from "motion/react";
-import type { HTMLAttributes } from "react";
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
+import type { Transition, Variants } from 'motion/react'
+import { motion, useAnimation } from 'motion/react'
+import type { HTMLAttributes } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
 export interface ArrowDownAZIconHandle {
-  startAnimation: () => void;
-  stopAnimation: () => void;
+  startAnimation: () => void
+  stopAnimation: () => void
 }
 
 interface ArrowDownAZIconProps extends HTMLAttributes<HTMLDivElement> {
-  size?: number;
+  size?: number
 }
 
 const SWAP_TRANSITION: Transition = {
-  type: "spring",
+  type: 'spring',
   stiffness: 240,
   damping: 24,
-};
+}
 
 const SWAP_VARIANTS: Variants = {
   normal: {
@@ -29,43 +29,43 @@ const SWAP_VARIANTS: Variants = {
   animate: (custom: number) => ({
     translateY: custom * 10,
   }),
-};
+}
 
 const ArrowDownAZIcon = forwardRef<ArrowDownAZIconHandle, ArrowDownAZIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
-    const controls = useAnimation();
-    const isControlledRef = useRef(false);
+    const controls = useAnimation()
+    const isControlledRef = useRef(false)
 
     useImperativeHandle(ref, () => {
-      isControlledRef.current = true;
+      isControlledRef.current = true
 
       return {
-        startAnimation: () => controls.start("animate"),
-        stopAnimation: () => controls.start("normal"),
-      };
-    });
+        startAnimation: () => controls.start('animate'),
+        stopAnimation: () => controls.start('normal'),
+      }
+    })
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (isControlledRef.current) {
-          onMouseEnter?.(e);
+          onMouseEnter?.(e)
         } else {
-          controls.start("animate");
+          controls.start('animate')
         }
       },
       [controls, onMouseEnter]
-    );
+    )
 
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (isControlledRef.current) {
-          onMouseLeave?.(e);
+          onMouseLeave?.(e)
         } else {
-          controls.start("normal");
+          controls.start('normal')
         }
       },
       [controls, onMouseLeave]
-    );
+    )
 
     return (
       <div
@@ -107,10 +107,10 @@ const ArrowDownAZIcon = forwardRef<ArrowDownAZIconHandle, ArrowDownAZIconProps>(
           />
         </svg>
       </div>
-    );
+    )
   }
-);
+)
 
-ArrowDownAZIcon.displayName = "ArrowDownAZIcon";
+ArrowDownAZIcon.displayName = 'ArrowDownAZIcon'
 
-export { ArrowDownAZIcon };
+export { ArrowDownAZIcon }

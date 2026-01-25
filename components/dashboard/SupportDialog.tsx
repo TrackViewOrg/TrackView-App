@@ -1,7 +1,13 @@
 'use client'
 
 import * as React from 'react'
-import { Loader2, Send, MessageSquare, ExternalLink, HelpCircle } from 'lucide-react'
+import {
+  ExternalLink,
+  HelpCircle,
+  Loader2,
+  MessageSquare,
+  Send,
+} from 'lucide-react'
 
 import {
   Dialog,
@@ -64,15 +70,22 @@ export function SupportDialog({ children }: SupportDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 py-2">
+        <div className="grid grid-cols-1 gap-6 py-2 md:grid-cols-5">
           {/* Support Links Section */}
-          <div className="md:col-span-2 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:col-span-2">
             <div className="space-y-3">
-              <h4 className="text-sm font-medium leading-none">Quick Help</h4>
-              <p className="text-xs text-muted-foreground">Try these first for faster answers.</p>
+              <h4 className="text-sm leading-none font-medium">Quick Help</h4>
+              <p className="text-muted-foreground text-xs">
+                Try these first for faster answers.
+              </p>
 
               <div className="grid gap-2">
-                <Button variant="outline" size="sm" className="justify-start w-full" asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  asChild
+                >
                   <a href="/faq" target="_blank" rel="noreferrer">
                     <HelpCircle className="mr-2 h-4 w-4" />
                     Read FAQ
@@ -80,8 +93,17 @@ export function SupportDialog({ children }: SupportDialogProps) {
                   </a>
                 </Button>
 
-                <Button variant="outline" size="sm" className="justify-start w-full" asChild>
-                  <a href="https://discord.gg/yourlink" target="_blank" rel="noreferrer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <a
+                    href="https://discord.gg/yourlink"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Join Discord
                     <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
@@ -92,21 +114,25 @@ export function SupportDialog({ children }: SupportDialogProps) {
 
             <Separator />
 
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-muted-foreground text-[11px]">
               Direct email: <br />
-              <span className="text-primary font-medium">support@trackview.com</span>
+              <span className="text-primary font-medium">
+                support@trackview.com
+              </span>
             </div>
           </div>
 
           {/* Form Section */}
-          <form onSubmit={handleSubmit} className="md:col-span-3 grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4 md:col-span-3">
             <div className="grid gap-2">
               <Label htmlFor="subject">Subject</Label>
               <Input
                 id="subject"
                 placeholder="e.g., Session sync issue"
                 value={formData.subject}
-                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, subject: e.target.value })
+                }
                 required
                 disabled={isLoading}
               />
@@ -118,13 +144,15 @@ export function SupportDialog({ children }: SupportDialogProps) {
                 placeholder="Describe the issue..."
                 className="min-h-[100px] resize-none"
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
                 required
                 disabled={isLoading}
               />
             </div>
 
-            <DialogFooter className="sm:justify-end gap-2">
+            <DialogFooter className="gap-2 sm:justify-end">
               <Button
                 type="button"
                 variant="ghost"

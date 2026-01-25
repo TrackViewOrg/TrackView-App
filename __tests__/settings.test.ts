@@ -1,12 +1,12 @@
 import {
-  updateProfileAvatar,
-  getMFAFactors,
-  enrollMFA,
-  verifyAndEnableMFA,
   deleteFactor,
+  enrollMFA,
+  getMFAFactors,
   initiateEmailChange,
-  updateUsername,
+  updateProfileAvatar,
   updateProfileVisibility,
+  updateUsername,
+  verifyAndEnableMFA,
 } from '@/lib/auth/settings'
 import { createClient } from '@/lib/supabase/server'
 import qrcode from 'qrcode'

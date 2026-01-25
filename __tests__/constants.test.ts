@@ -1,51 +1,51 @@
 import {
-  homeRoute,
-  signinRoute,
-  signupRoute,
   authRoute,
+  callbackRoute,
+  carsRoute,
   dashRoute,
   forgotPasswordRoute,
-  verifyMfaRoute,
+  homeRoute,
+  leaderboardRoute,
+  sessionsRoute,
+  settingsAccountRoute,
+  settingsDataRoute,
+  settingsSecurityRoute,
+  settingsSubscriptionRoute,
+  signinRoute,
+  signupRoute,
+  statisticsRoute,
+  tracksRoute,
   updatePasswordRoute,
   verifyEmailRoute,
-  callbackRoute,
-  settingsAccountRoute,
-  settingsSecurityRoute,
-  settingsDataRoute,
-  settingsSubscriptionRoute,
-  sessionsRoute,
-  statisticsRoute,
-  leaderboardRoute,
-  tracksRoute,
-  carsRoute
-} from '@/lib/constants';
+  verifyMfaRoute,
+} from '@/lib/constants'
 
 describe('Application Constants', () => {
   it('should have correct route paths', () => {
-    expect(homeRoute).toBe('/');
-    expect(signinRoute).toBe('/auth/signin');
-    expect(signupRoute).toBe('/auth/signup');
-    expect(authRoute).toBe('/auth');
-    expect(dashRoute).toBe('/dashboard');
-    expect(forgotPasswordRoute).toBe('/auth/forgot');
-    expect(verifyMfaRoute).toBe('/auth/verify-mfa');
-    expect(updatePasswordRoute).toBe('/update-password');
-    expect(verifyEmailRoute).toBe('/auth/verify-email');
-    expect(callbackRoute).toBe('/auth/callback');
-    
+    expect(homeRoute).toBe('/')
+    expect(signinRoute).toBe('/auth/signin')
+    expect(signupRoute).toBe('/auth/signup')
+    expect(authRoute).toBe('/auth')
+    expect(dashRoute).toBe('/dashboard')
+    expect(forgotPasswordRoute).toBe('/auth/forgot')
+    expect(verifyMfaRoute).toBe('/auth/verify-mfa')
+    expect(updatePasswordRoute).toBe('/update-password')
+    expect(verifyEmailRoute).toBe('/auth/verify-email')
+    expect(callbackRoute).toBe('/auth/callback')
+
     // Dashboard sub-routes
-    expect(settingsAccountRoute).toBe('/dashboard/account');
-    expect(settingsSecurityRoute).toBe('/dashboard/security');
-    expect(settingsDataRoute).toBe('/dashboard/data');
-    expect(settingsSubscriptionRoute).toBe('/dashboard/subscription');
-    expect(sessionsRoute).toBe('/dashboard/sessions');
-    expect(statisticsRoute).toBe('/dashboard/statistics');
-    expect(leaderboardRoute).toBe('/dashboard/leaderboard');
-    
+    expect(settingsAccountRoute).toBe('/dashboard/account')
+    expect(settingsSecurityRoute).toBe('/dashboard/security')
+    expect(settingsDataRoute).toBe('/dashboard/data')
+    expect(settingsSubscriptionRoute).toBe('/dashboard/subscription')
+    expect(sessionsRoute).toBe('/dashboard/sessions')
+    expect(statisticsRoute).toBe('/dashboard/stats')
+    expect(leaderboardRoute).toBe('/dashboard/leaderboard')
+
     // Other main routes
-    expect(tracksRoute).toBe('/tracks');
-    expect(carsRoute).toBe('/cars');
-  });
+    expect(tracksRoute).toBe('/tracks')
+    expect(carsRoute).toBe('/cars')
+  })
 
   it('should not have duplicate route paths', () => {
     const allRoutes = [
@@ -67,10 +67,10 @@ describe('Application Constants', () => {
       statisticsRoute,
       leaderboardRoute,
       tracksRoute,
-      carsRoute
-    ];
+      carsRoute,
+    ]
 
-    const uniqueRoutes = new Set(allRoutes);
-    expect(uniqueRoutes.size).toBe(allRoutes.length);
-  });
-});
+    const uniqueRoutes = new Set(allRoutes)
+    expect(uniqueRoutes.size).toBe(allRoutes.length)
+  })
+})

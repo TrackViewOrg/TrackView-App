@@ -1,4 +1,29 @@
-get better programs, like pay 5$ get unlimited access untill you get better
-stuff for landing on the saved
+Add session quick overview
+add session advanced view with graphs and polayback working
+add simple telemettry boxes to it
+add the map with the laps
 
-WHAT HAPPENS WHEN THERE IS NO TRACKS / CAR / GAME on the database
+
+1. Revenue & User Acquisition
+    Dynamic Tiering: Implement "Telemetry Tiers" where higher-paid levels record higher-frequency data or additional channels.
+    Micro-Transaction Access: "Skill-Up" pass: $5 for unlimited Pro features until specific performance benchmarks are met. how to not get played with this ?
+    Referral Loop: "Analyze 5 sessions, get 2 weeks of Pro free" automated reward trigger.
+
+2. Database & Edge Cases
+    Missing Metadata Handler: Logic for when a Track/Car/Game is not in the DB (fallback to generic "Unknown" profiles with user-input prompts).
+    Cleanup Service: Python CRON task to purge orphaned sessions or truncated 100+ lap stints that exceed storage quotas.
+
+3. Social & Competitive Architecture
+    Organizations: Support for "Teams" with shared telemetry folders and role-based access.
+    Tournaments: Integrated leaderboard system based on verified session uploads.
+    Live Review: Multi-person WebSocket sync in the Dashboard for real-time stint coaching.
+
+4. Intelligence Engine (The ML Pipeline)
+    Level 1 (Feature Extraction): Telemetry fed to a local ML model to generate a "Driver Score."
+    Level 2 (Diagnostic): Identify specific faults (e.g., "Braking too early 60% of the time").
+    Level 3 (Prescriptive): Generate physical targets (e.g., "Hold 80% pressure for 20% longer").
+    Level 4 (Natural Language): Feed metrics to an LLM to output human-readable coaching tips in the UI.
+
+5. Infrastructure & DevEx
+    GitHub CDN: Use GitHub Actions/Repo as a lightweight CDN for distributing developer notes and app updates.
+    Landing Page: Dedicated "Saved Sessions" showcase for marketing the dashboard's UI/UX.

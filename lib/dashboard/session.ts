@@ -2,6 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+/**
+ * Fetches all racing sessions for the currently authenticated user.
+ * Includes related data for game, car, and track.
+ *
+ * @returns Object containing session data or an error message.
+ */
 export async function getUserSessions() {
   const supabase = await createClient()
 
@@ -9,22 +15,22 @@ export async function getUserSessions() {
     data: { user },
   } = await supabase.auth.getUser()
 
-
   if (!user) {
     return { error: 'User not authenticated' }
   }
 
   const { data, error } = await supabase
     .from('sessions')
-    .select(`
+    .select(
+      `
       *,
       game:games (*),
       car:cars (*),
       track:tracks (*)
-    `)
+    `
+    )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-
 
   if (error) {
     console.error('Error fetching sessions:', error)
@@ -34,6 +40,12 @@ export async function getUserSessions() {
   return { data }
 }
 
+/**
+ * Deletes a specific session and its associated telemetry files from storage.
+ *
+ * @param sessionId - The UUID of the session to delete.
+ * @returns Success object or error object.
+ */
 export async function deleteSession(sessionId: string) {
   const supabase = await createClient()
 
@@ -80,6 +92,38 @@ export async function deleteSession(sessionId: string) {
   if (deleteError) {
     console.error('Error deleting session record:', deleteError)
     return { error: deleteError.message }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Toggles the bookmarked status of a session.
+ *
+ * @param sessionId - The UUID of the session to toggle.
+ * @param bookmarked - The new bookmarked status.
+ * @returns Success object or error object.
+ */
+export async function toggleSessionBookmark(sessionId: string, bookmarked: boolean) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'User not authenticated' }
+  }
+
+  const { error } = await supabase
+    .from('sessions')
+    .update({ bookmarked })
+    .eq('id', sessionId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error toggling bookmark:', error)
+    return { error: error.message }
   }
 
   return { success: true }

@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -17,13 +17,16 @@ import {
 } from '@tanstack/react-table'
 import {
   ArrowDownUpIcon,
+  BookmarkIcon,
   ClockArrowDownIcon,
+  CopyIcon,
   FilterIcon,
   ListFilter,
+  Loader2,
   MoreHorizontal,
   TrashIcon,
-  UploadIcon,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -33,10 +36,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuSub,
-  DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Table,
@@ -47,7 +50,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getUserSessions, deleteSession } from '@/lib/dashboard/session'
+import { deleteSession, getUserSessions } from '@/lib/dashboard/session'
 import { Session } from '@/types'
 import {
   AlertDialog,
@@ -58,28 +61,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 
 export const getShortTimeAgo = (dateInput: string) => {
   if (!dateInput) return 'n/a'
 
-  // 1. Parse the record and force it to a UTC timestamp
-  // Input: "2026-01-24 21:37:37.986681+00" -> "2026-01-24T21:37:37.986681+00"
   const recordDate = new Date(dateInput.replace(' ', 'T'))
-
-  // 2. Get the current time as a UTC timestamp
   const now = new Date()
-
-  // 3. Subtract UTC milliseconds from UTC milliseconds
-  // .getTime() is independent of your computer's timezone setting.
   const seconds = Math.floor((now.getTime() - recordDate.getTime()) / 1000)
 
-  // LOGS FOR YOU TO CHECK (Open Browser Console F12)
-  // console.log("Record (UTC):", recordDate.toUTCString());
-  // console.log("Now (UTC):", now.toUTCString());
-  // console.log("Diff Seconds:", seconds);
+  // Handle invalid dates or future dates immediately
+  if (isNaN(seconds) || seconds < 0) return 'Now'
 
-  if (isNaN(seconds) || seconds < 0) return '0s'
+  // NEW: Quick check for under a minute
+  if (seconds < 60) return 'Now'
 
   const units = [
     { label: 'y', seconds: 31536000 },
@@ -88,19 +83,17 @@ export const getShortTimeAgo = (dateInput: string) => {
     { label: 'd', seconds: 86400 },
     { label: 'h', seconds: 3600 },
     { label: 'm', seconds: 60 },
-    { label: 's', seconds: 1 },
   ]
 
   for (const unit of units) {
     const interval = Math.floor(seconds / unit.seconds)
     if (interval >= 1) {
-      return `${interval}${unit.label}`
+      return `${interval}${unit.label} Ago`
     }
   }
 
   return '0s'
 }
-
 export const formatLapTime = (seconds: number) => {
   if (!seconds) return '00:00.000'
   const m = Math.floor(seconds / 60)
@@ -124,6 +117,7 @@ export default function SessionDataGrid() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -145,25 +139,40 @@ export default function SessionDataGrid() {
   const confirmDelete = async () => {
     if (!sessionToDelete) return
 
-    const { error } = await deleteSession(sessionToDelete)
-    if (error) {
-      console.error("Failed to delete session:", error)
-      // Optionally show an error toast here
-    } else {
-      // Remove from local state
-      setSessions((prev) => prev ? prev.filter(s => s.id !== sessionToDelete) : null)
-    }
+    const idToDelete = sessionToDelete
     setDeleteDialogOpen(false)
     setSessionToDelete(null)
+    setIsDeletingId(idToDelete)
+
+    const { error } = await deleteSession(idToDelete)
+    if (error) {
+      console.error('Failed to delete session:', error)
+      toast.error('Failed to delete session')
+      setIsDeletingId(null)
+    } else {
+      // Remove from local state
+      setSessions((prev) =>
+        prev ? prev.filter((s) => s.id !== idToDelete) : null
+      )
+      toast.success('Session deleted successfully')
+      setIsDeletingId(null)
+    }
+  }
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard
+      .writeText(id)
+      .then(() => toast.success('ID copied to clipboard'))
+      .catch(() => toast.error('Failed to copy ID'))
   }
 
   const uniqueCars = React.useMemo(() => {
     if (!sessions) return []
     const cars = new Map()
-    sessions.forEach(session => {
-        if (session.car) {
-            cars.set(session.car.id, session.car)
-        }
+    sessions.forEach((session) => {
+      if (session.car) {
+        cars.set(session.car.id, session.car)
+      }
     })
     return Array.from(cars.values())
   }, [sessions])
@@ -171,10 +180,10 @@ export default function SessionDataGrid() {
   const uniqueTracks = React.useMemo(() => {
     if (!sessions) return []
     const tracks = new Map()
-    sessions.forEach(session => {
-        if (session.track) {
-            tracks.set(session.track.id, session.track)
-        }
+    sessions.forEach((session) => {
+      if (session.track) {
+        tracks.set(session.track.id, session.track)
+      }
     })
     return Array.from(tracks.values())
   }, [sessions])
@@ -187,7 +196,7 @@ export default function SessionDataGrid() {
         const track = row.original.track
         if (!track) return false
         if (Array.isArray(value) && value.length > 0) {
-            return value.includes(track.id)
+          return value.includes(track.id)
         }
         return true
       },
@@ -218,7 +227,7 @@ export default function SessionDataGrid() {
         const car = row.original.car
         if (!car) return false
         if (Array.isArray(value) && value.length > 0) {
-            return value.includes(car.id)
+          return value.includes(car.id)
         }
         return true
       },
@@ -230,7 +239,9 @@ export default function SessionDataGrid() {
         return (
           <div className="flex items-center gap-4">
             {carImage && (
-              <div className={'w-16 flex-shrink-0 overflow-hidden rounded-[4px]'}>
+              <div
+                className={'w-16 flex-shrink-0 overflow-hidden rounded-[4px]'}
+              >
                 <img
                   src={carImage}
                   alt={'Car'}
@@ -259,7 +270,9 @@ export default function SessionDataGrid() {
         return (
           <div className="flex flex-col items-start">
             <span>{formatLapTime(row.original.best_lap_time)}</span>
-            <span className={'flex items-center gap-0.5 text-xs text-green-500'}>
+            <span
+              className={'flex items-center gap-0.5 text-xs text-green-500'}
+            >
               <span>{row.original.gap_to_pb}</span>
               <ClockArrowDownIcon height={12} />
             </span>
@@ -314,8 +327,10 @@ export default function SessionDataGrid() {
 
         return (
           <div className="flex flex-col items-end text-right">
-            <span className="font-medium">{getShortTimeAgo(formatted)} ago</span>
-            <span className="text-muted-foreground/70 text-xs">{formatted}</span>
+            <span className="font-medium">{getShortTimeAgo(formatted)}</span>
+            <span className="text-muted-foreground/70 text-xs">
+              {formatted}
+            </span>
           </div>
         )
       },
@@ -324,8 +339,15 @@ export default function SessionDataGrid() {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
+        if (isDeletingId === row.original.id) {
+          return (
+            <div className="flex justify-end pr-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          )
+        }
         return (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -342,10 +364,24 @@ export default function SessionDataGrid() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="group hover:bg-destructive/10 hover:text-foreground focus:text-foreground w-full justify-start gap-2 rounded-[3px] transition-colors focus:bg-red-500/20"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleCopyId(row.original.id)
+                    }}
+                  >
+                    <CopyIcon className="group-hover:text-foreground group-focus:text-foreground h-4 w-4 transition-colors" />
+                    <span>Copy ID</span>
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="group hover:bg-destructive/10 hover:text-destructive focus:text-destructive-foreground w-full justify-start gap-2 rounded-[3px] transition-colors focus:bg-red-500/20"
                     onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteClick(row.original.id)
+                      e.stopPropagation()
+                      handleDeleteClick(row.original.id)
                     }}
                   >
                     <TrashIcon className="group-hover:text-destructive group-focus:text-destructive-foreground h-4 w-4 transition-colors" />
@@ -354,6 +390,13 @@ export default function SessionDataGrid() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <BookmarkIcon className="h-4 w-4" />
+            </Button>
           </div>
         )
       },
@@ -378,21 +421,21 @@ export default function SessionDataGrid() {
   })
 
   const isSortedBy = (id: string, desc: boolean) => {
-      return sorting.some(s => s.id === id && s.desc === desc)
+    return sorting.some((s) => s.id === id && s.desc === desc)
   }
 
   const toggleSort = (id: string, desc: boolean) => {
-      setSorting(current => {
-          if (isSortedBy(id, desc)) {
-              return []
-          }
-          return [{ id, desc }]
-      })
+    setSorting((current) => {
+      if (isSortedBy(id, desc)) {
+        return []
+      }
+      return [{ id, desc }]
+    })
   }
 
   const resetAll = () => {
-      setSorting([])
-      table.resetColumnFilters()
+    setSorting([])
+    table.resetColumnFilters()
   }
 
   if (error) {
@@ -415,7 +458,7 @@ export default function SessionDataGrid() {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="bg-muted border-border/50 m-0 gap-0 rounded-sm px-0.5 font-light !text-foreground/80 !text-md"
+            className="bg-muted border-border/50 !text-foreground/80 !text-md m-0 gap-0 rounded-sm px-0.5 font-light"
           >
             <DropdownMenuLabel
               className={
@@ -577,9 +620,14 @@ export default function SessionDataGrid() {
                   <TableRow
                     key={row.id}
                     onClick={() =>
+                      isDeletingId !== row.original.id &&
                       router.push(`${pathname}/${row.original.id}`)
                     }
-                    className="hover:bg-muted/20 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200"
+                    className={`hover:bg-muted/20 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200 ${
+                      isDeletingId === row.original.id
+                        ? 'bg-muted/10 pointer-events-none opacity-50'
+                        : ''
+                    }`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>

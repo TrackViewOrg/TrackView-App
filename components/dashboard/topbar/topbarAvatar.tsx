@@ -9,10 +9,7 @@ import {
   ExternalLinkIcon,
   Loader2Icon,
   MessageCircleQuestionMarkIcon,
-  RocketIcon,
   Settings2Icon,
-  SlidersIcon,
-  SparkleIcon,
   ZapIcon,
 } from 'lucide-react'
 
