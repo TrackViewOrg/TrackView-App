@@ -50,7 +50,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { deleteSession, getUserSessions } from '@/lib/dashboard/session'
+import {
+  deleteSession,
+  getUserSessions,
+  toggleSessionBookmark,
+} from '@/lib/dashboard/session'
 import { Session } from '@/types'
 import {
   AlertDialog,
@@ -166,6 +170,36 @@ export default function SessionDataGrid() {
       .catch(() => toast.error('Failed to copy ID'))
   }
 
+  const handleBookmarkToggle = async (
+    sessionId: string,
+    currentStatus: boolean
+  ) => {
+    const newStatus = !currentStatus
+
+    // Optimistic update
+    setSessions((prev) =>
+      prev
+        ? prev.map((s) =>
+            s.id === sessionId ? { ...s, bookmarked: newStatus } : s
+          )
+        : null
+    )
+
+    const { error } = await toggleSessionBookmark(sessionId, newStatus)
+    if (error) {
+      console.error('Failed to toggle bookmark:', error)
+      toast.error('Failed to update bookmark')
+      // Revert on error
+      setSessions((prev) =>
+        prev
+          ? prev.map((s) =>
+              s.id === sessionId ? { ...s, bookmarked: currentStatus } : s
+            )
+          : null
+      )
+    }
+  }
+
   const uniqueCars = React.useMemo(() => {
     if (!sessions) return []
     const cars = new Map()
@@ -207,7 +241,7 @@ export default function SessionDataGrid() {
 
         return (
           <div className="flex items-center gap-4">
-            <div className="bg-muted/20 flex h-6.5 w-8.5 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px]">
+            <div className="bg-muted/20 flex h-6 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-[4px]">
               <span className="text-5xl font-bold">{trackFlag}</span>
             </div>
             <div className="flex flex-col items-start">
@@ -336,6 +370,21 @@ export default function SessionDataGrid() {
       },
     },
     {
+      accessorKey: 'bookmarked',
+      header: '',
+      filterFn: (row, id, value) => {
+        if (value === true) {
+          return row.original.bookmarked === true
+        }
+        return true
+      },
+      cell: ({ row }) => {
+        // This column is hidden but used for filtering
+        return null
+      },
+      enableHiding: true,
+    },
+    {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
@@ -348,6 +397,18 @@ export default function SessionDataGrid() {
         }
         return (
           <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleBookmarkToggle(row.original.id, row.original.bookmarked)
+              }}
+            >
+              <BookmarkIcon
+                className={`h-4 w-4 ${row.original.bookmarked ? 'fill-current' : ''}`}
+              />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -390,13 +451,6 @@ export default function SessionDataGrid() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              variant="ghost"
-              className="h-8 w-8 p-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <BookmarkIcon className="h-4 w-4" />
-            </Button>
           </div>
         )
       },
@@ -416,7 +470,10 @@ export default function SessionDataGrid() {
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
+      columnVisibility: {
+        ...columnVisibility,
+        bookmarked: false, // Hide the bookmarked column by default
+      },
     },
   })
 
@@ -504,6 +561,17 @@ export default function SessionDataGrid() {
               <h1>Filter By</h1>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+
+            <DropdownMenuCheckboxItem
+              checked={table.getColumn('bookmarked')?.getFilterValue() === true}
+              onCheckedChange={(checked) => {
+                table
+                  .getColumn('bookmarked')
+                  ?.setFilterValue(checked ? true : undefined)
+              }}
+            >
+              Bookmarked Only
+            </DropdownMenuCheckboxItem>
 
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Car</DropdownMenuSubTrigger>
@@ -625,7 +693,7 @@ export default function SessionDataGrid() {
                     }
                     className={`hover:bg-muted/20 hover:text-foreground text-muted-foreground cursor-pointer transition-all duration-200 ${
                       isDeletingId === row.original.id
-                        ? 'bg-muted/10 pointer-events-none opacity-50'
+                        ? 'bg-muted/10 pointer-events-none opacity-20'
                         : ''
                     }`}
                   >
@@ -645,7 +713,7 @@ export default function SessionDataGrid() {
                     colSpan={columns.length}
                     className="text-muted-foreground h-24 text-center"
                   >
-                    You Dont Have Any Sessions Yet
+                    No Sessions Found
                   </TableCell>
                 </TableRow>
               )}

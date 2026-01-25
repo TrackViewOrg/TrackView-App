@@ -104,7 +104,10 @@ export async function deleteSession(sessionId: string) {
  * @param bookmarked - The new bookmarked status.
  * @returns Success object or error object.
  */
-export async function toggleSessionBookmark(sessionId: string, bookmarked: boolean) {
+export async function toggleSessionBookmark(
+  sessionId: string,
+  bookmarked: boolean
+) {
   const supabase = await createClient()
 
   const {
