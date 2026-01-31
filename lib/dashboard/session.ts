@@ -48,7 +48,7 @@ export async function getUserSessions() {
  */
 export async function getSessionById(sessionId: string) {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase
     .from('sessions')
     .select('*')
@@ -70,7 +70,7 @@ export async function getSessionById(sessionId: string) {
  */
 export async function getSessionLaps(sessionId: string) {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase
     .from('laps')
     .select('*')

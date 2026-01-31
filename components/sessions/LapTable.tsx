@@ -4,6 +4,7 @@ import React from 'react'
 import { formatLapTime } from '@/components/sessions/utils'
 import { useSession } from '@/components/sessions/SessionContext'
 import { cn } from '@/lib/utils'
+import { HourglassIcon, Pin } from 'lucide-react' // Assuming you have lucide-react installed
 
 export interface Lap {
   id: string
@@ -21,73 +22,113 @@ interface LapTableProps {
 }
 
 export function LapTable({ laps }: LapTableProps) {
-  const { selectedLapId, setSelectedLapId } = useSession()
+  const { selectedLapId, setSelectedLapId, referenceLapId } = useSession()
 
-  const selectedLap = laps.find((l) => l.id === selectedLapId)
-  const fastestLap = laps.reduce((prev, current) => {
-    return prev.lap_time < current.lap_time ? prev : current
-  }, laps[0])
+  const referenceLap = laps.find((l) => l.id === referenceLapId)
+
+  // Calculate fastest lap once
+  const fastestLap = React.useMemo(() => {
+    return laps.reduce((prev, current) => {
+      return prev.lap_time < current.lap_time ? prev : current
+    }, laps[0])
+  }, [laps])
 
   return (
-    <div className={'flex h-full w-full flex-col border-r p-1'}>
-      <div
-        className={
-          'border-border/60 bg-primary-foreground/60 text-muted-foreground/40 flex w-full rounded-t-sm border px-5 py-1 text-sm select-none'
-        }
-      >
-        <span className="w-20">#</span>
-        <span className="w-60">Time</span>
-        <span className="w-60 pl-0.5">Δ</span>
+    <div className="bg-background flex h-full w-170 flex-col border-r">
+      {/* Header */}
+      <div className="text-muted-foreground bg-muted flex w-full border-b px-5 py-2 text-xs font-medium tracking-wider uppercase select-none">
+        <span className="w-16">Lap</span>
+        <span className="w-32">Time</span>
+        <span className="flex-1 text-right">Delta</span>
       </div>
-      {laps.map((lap) => {
-        const isSelected = lap.id === selectedLapId
-        const isFastest = lap.id === fastestLap?.id
-        
-        let delta = 0
-        if (selectedLap) {
-          delta = lap.lap_time - selectedLap.lap_time
-        }
 
-        return (
-          <div
-            key={lap.lap_number}
-            onClick={() => setSelectedLapId(lap.id)}
-            className={cn(
-              'border-border/60 bg-primary-foreground/70 text-muted-foreground hover:bg-primary-foreground text-[14px] flex w-full cursor-pointer border-x border-b px-5 py-1.5 transition-all duration-200 select-none',
-              isSelected && 'bg-accent/60'
-            )}
-          >
-            <span className="w-20 ">{lap.lap_number}</span>
-            <span
-              className={cn('w-60 ', isFastest && 'text-purple-500')}
-            >
-              {formatLapTime(lap.lap_time)}
-            </span>
-            <span
+      {/* Rows */}
+      <div className="flex-1 overflow-y-auto">
+        {laps.map((lap) => {
+          const isSelected = lap.id === selectedLapId
+          const isFastest = lap.id === fastestLap?.id
+          const isReference = lap.id === referenceLapId
+
+          let delta = 0
+          if (referenceLap) {
+            delta = lap.lap_time - referenceLap.lap_time
+          }
+
+          return (
+            <div
+              key={lap.lap_number}
+              onClick={() => setSelectedLapId(lap.id)}
               className={cn(
-                'w-60 pl-0.5 text-muted-foreground/50',
-                delta > 0
-                  ? 'text-red-500'
-                  : delta < 0
-                    ? 'text-green-500'
-                    : ''
+                'group flex w-full cursor-pointer items-center border-b border-l-4 px-4 py-2 text-sm transition-colors duration-200 select-none',
+                // Base Borders
+                'border-b-border/50 border-l-transparent',
+
+                // 1. SELECTION (Background Focus)
+                isSelected
+                  ? 'bg-muted border-l-primary'
+                  : 'hover:bg-muted/50 text-muted-foreground',
+
+                // 2. REFERENCE (Visual Anchor)
+                // If it's reference but NOT selected, give it a subtle tint or border hint
+                isReference && !isSelected && 'bg-muted border-l-[#dff976]'
               )}
             >
-              {selectedLap
-                ? delta === 0
-                  ? '---'
-                  : (delta > 0 ? '+' : '') + delta.toFixed(3)
-                : '-'}
-            </span>
-          </div>
-        )
-      })}
-      <div
-        className={
-          'border-border/60 bg-primary-foreground/60 text-muted-foreground/40 flex w-full justify-center rounded-b-sm border border-t-transparent px-5 py-0.5 text-xs select-none'
-        }
-      >
-        <span>{laps.length} Laps Recorded</span>
+              {/* Column 1: Lap Number & Status Icons */}
+              <div className="flex w-16 items-center gap-2">
+                <span
+                  className={cn(
+                    'font-mono',
+                    isSelected ? 'text-foreground' : ''
+                  )}
+                >
+                  {lap.lap_number}
+                </span>
+                {/* Icons provide clarity without relying on color alone */}
+                {isReference && (
+                  <Pin size={12} className="fill-lime-500/20 text-lime-500" />
+                )}
+              </div>
+
+              {/* Column 2: Time & Fastest Indicator */}
+              <div className="flex w-32 items-center gap-2">
+                <span
+                  className={cn(
+                    'font-mono',
+                    isFastest
+                      ? 'text-purple-500'
+                      : isSelected
+                        ? 'text-foreground'
+                        : ''
+                  )}
+                >
+                  {formatLapTime(lap.lap_time)}
+                </span>
+                {isFastest && (
+                  <HourglassIcon size={12} className="text-purple-500" />
+                )}
+              </div>
+
+              {/* Column 3: Delta */}
+              <div className="flex-1 pr-1 text-right">
+                <span
+                  className={cn(
+                    'text-md font-mono',
+                    // Only color the delta if it's NOT the reference lap
+                    !isReference && delta > 0 && 'text-red-500',
+                    !isReference && delta < 0 && 'text-green-500',
+                    isReference && 'text-muted-foreground font-medium' // Reference gets its own distinct color
+                  )}
+                >
+                  {referenceLap
+                    ? delta === 0
+                      ? 'REFERENCE' // Explicitly say REF instead of ---
+                      : (delta > 0 ? '+' : '') + delta.toFixed(3)
+                    : '-'}
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

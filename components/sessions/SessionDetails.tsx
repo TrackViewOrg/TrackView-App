@@ -1,69 +1,93 @@
 'use client'
 
 import React from 'react'
-import { ChevronsUpDownIcon } from 'lucide-react'
 import { SegmentedBar } from '@/components/ui/segmented-bar'
-import { Button } from '@/components/ui/button'
-import { LapTable, Lap } from '@/components/sessions/LapTable'
-import { SessionProvider } from '@/components/sessions/SessionContext'
+import { Lap, LapTable } from '@/components/sessions/LapTable'
+import {
+  SessionProvider,
+  useSession,
+} from '@/components/sessions/SessionContext'
+import ComparisonLapSelector from '@/components/sessions/ComparisonLapSelector'
+import { TrackMap } from '@/components/sessions/TrackMap'
 
 interface SessionDetailsProps {
   sessionId: string
   laps: Lap[]
 }
 
+function SessionControls({ laps }: { laps: Lap[] }) {
+  const { selectedLapId, setSelectedLapId, referenceLapId, setReferenceLapId } =
+    useSession()
+
+  return (
+    <div
+      className={'bg-muted flex w-full justify-between gap-1.5 border-b p-1'}
+    >
+      <SegmentedBar>
+        <div>
+          <h1 className={'text-muted-foreground select-none'}>Spa</h1>
+        </div>
+        <div>
+          <h1 className={'text-muted-foreground select-none'}>
+            Vcr Alpha 2025
+          </h1>
+        </div>
+        <div>
+          <h1 className={'text-muted-foreground select-none'}>2 weeks ago</h1>
+        </div>
+      </SegmentedBar>
+
+      <SegmentedBar>
+        <div className="p-0">
+          <ComparisonLapSelector
+            laps={laps}
+            selectedLapId={selectedLapId}
+            onSelectLap={setSelectedLapId}
+            label="Comp"
+          />
+        </div>
+
+        <div className="p-0">
+          <ComparisonLapSelector
+            laps={laps}
+            selectedLapId={referenceLapId}
+            onSelectLap={setReferenceLapId}
+            label="REF"
+          />
+        </div>
+      </SegmentedBar>
+    </div>
+  )
+}
+
 export function SessionDetails({ sessionId, laps }: SessionDetailsProps) {
+  // Determine initial reference lap (e.g., fastest lap or first lap)
+  const fastestLap = laps.reduce((prev, current) => {
+    return prev.lap_time < current.lap_time ? prev : current
+  }, laps[0])
+
+  const initialReferenceLapId = fastestLap
+    ? fastestLap.id
+    : laps.length > 0
+      ? laps[0].id
+      : null
+  const initialSelectedLapId = laps.length > 0 ? laps[0].id : null
+
   return (
     <SessionProvider
       key={sessionId}
-      initialSelectedLapId={laps.length > 0 ? laps[0].id : null}
+      initialSelectedLapId={initialSelectedLapId}
+      initialReferenceLapId={initialReferenceLapId}
     >
       <div className="flex h-full w-full flex-col">
-        <div className={'flex w-full justify-between gap-1.5 border-b p-1'}>
-          <SegmentedBar>
-            <div>
-              <h1 className={'text-muted-foreground select-none'}>Spa</h1>
-            </div>
-            <div>
-              <h1 className={'text-muted-foreground select-none'}>
-                Vcr Alpha 2025
-              </h1>
-            </div>
-            <div>
-              <h1 className={'text-muted-foreground select-none'}>2 weeks ago</h1>
-            </div>
-          </SegmentedBar>
-
-          <SegmentedBar>
-            <Button
-              size={'xs'}
-              className={
-                'text-muted-foreground/50 hover:text-muted-foreground gap-2'
-              }
-            >
-              <ChevronsUpDownIcon size={15} />
-              <div className={'flex items-center gap-1.5'}>
-                <h1>Comp:</h1>
-                <h1 className={'text-muted-foreground'}>Lap 01</h1>
-              </div>
-            </Button>
-            <Button
-              size={'xs'}
-              className={
-                'text-muted-foreground/50 hover:text-muted-foreground gap-2'
-              }
-            >
-              <ChevronsUpDownIcon size={15} />
-              <div className={'flex items-center gap-1.5'}>
-                <h1>REF:</h1>
-                <h1 className={'text-muted-foreground'}>Lap 01</h1>
-              </div>
-            </Button>
-          </SegmentedBar>
-        </div>
+        <SessionControls laps={laps} />
         <div className={'flex h-full w-full'}>
           <LapTable laps={laps} />
-          <div className={'h-full w-full'}></div>
+          <div className={'flex h-full w-full flex-col'}>
+            <div className={'h-full w-full border-b'}>
+              <TrackMap sessionId={sessionId} laps={laps} />
+            </div>
+          </div>
         </div>
       </div>
     </SessionProvider>
