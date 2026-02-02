@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import * as SliderPrimitive from '@radix-ui/react-slider'
+import { motion } from 'framer-motion'
 
 import { cn } from '@/lib/utils'
 
@@ -50,11 +51,13 @@ function Slider({
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          key={index}
-          className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
-        />
+        <SliderPrimitive.Thumb asChild key={index}>
+          <motion.span
+            layoutId={`slider-thumb-${index}`}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
+          />
+        </SliderPrimitive.Thumb>
       ))}
     </SliderPrimitive.Root>
   )

@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 import Section from '@/components/Section'
-import SessionDataGrid from '@/components/sessions/SessionDataGrid'
-import { SessionErrorToaster } from '@/components/sessions/SessionErrorToaster'
+import SessionDataGrid from '@/features/sessions/components/SessionDataGrid'
+import { SessionErrorToaster } from '@/features/sessions/components/SessionErrorToaster'
 
 function Page() {
   return (

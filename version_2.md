@@ -68,9 +68,39 @@ src/
 *   **Server State**: Use TanStack Query (React Query) or simple Server Component data passing for server state.
 *   **Client State**: Use Zustand for global client-only state (e.g., sidebar toggle, active session filters) instead of prop drilling.
 
-## 5. Migration Steps
+---
 
-1.  **Refactor Directory**: Create the `features` folder and start moving `components/sessions` and related logic there.
-2.  **Standardize UI**: Audit all pages to ensure they use components from `components/ui`.
-3.  **Optimize Data**: Convert one major page (e.g., Sessions List) to use Server Actions and Suspense.
-4.  **Visual Polish**: Apply the new theme variables and animations.
+# Implementation Roadmap
+
+## Phase 1: Structural Refactor (Feature-Based Architecture)
+- [x] **Step 1.1**: Create `features` directory structure.
+- [x] **Step 1.2**: Move `components/sessions` to `features/sessions/components`.
+- [x] **Step 1.3**: Move `components/auth` to `features/auth/components`.
+- [x] **Step 1.4**: Move `components/dashboard` to `features/dashboard/components`.
+- [x] **Step 1.5**: Move related `lib` files to their respective features (e.g., `lib/auth` -> `features/auth/lib`).
+- [x] **Step 1.6**: Fix import paths across the application.
+
+## Phase 2: Performance & Data Fetching
+- [ ] **Step 2.1**: Audit `app/dashboard/sessions` for client-side fetching.
+- [ ] **Step 2.2**: Convert Session List to Server Component.
+- [ ] **Step 2.3**: Implement Suspense boundaries for Session Details.
+
+## Phase 3: UI/UX Polish
+- [ ] **Step 3.1**: Standardize Color Palette in `globals.css`.
+- [ ] **Step 3.2**: Refactor Session Cards with new design system.
+- [ ] **Step 3.3**: Add Framer Motion transitions to Dashboard.
+
+---
+
+# Progress Log
+
+**Current Status**: Phase 1 completed.
+**Last Updated**: Just now.
+
+*   [x] Initiated Phase 1: Structural Refactor.
+*   [x] Created `features` directory structure (auth, sessions, dashboard, analytics, map).
+*   [x] Moved `components/sessions` to `features/sessions/components`.
+*   [x] Moved `components/auth` to `features/auth/components`.
+*   [x] Moved `components/dashboard` to `features/dashboard/components` (SupportDialog).
+*   [x] Moved `lib/auth` to `features/auth/lib`.
+*   [x] Fixed import paths across the application (SessionDetails, SessionDataGrid, SessionErrorToaster, SessionColumns, SessionToolbar, SessionTable).

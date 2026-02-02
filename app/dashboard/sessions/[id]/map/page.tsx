@@ -1,17 +1,18 @@
 import React from 'react'
+import { getSessionLaps } from '@/lib/dashboard/session'
+import MapPageClient from './MapPageClient'
 
-function Page() {
-  return <div className={"flex flex-col w-full h-full"}>
-    <div className={"w-full"}>
-      asd
-    </div>
-    <div className={"w-full h-full"}>
-      asdds
-    </div>
-    <div className={"w-f"}>
-      asd
-    </div>
-  </div>
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const { data: laps, error } = await getSessionLaps(id)
+
+  if (error) {
+    return <div>Error loading laps: {error}</div>
+  }
+
+  return <MapPageClient sessionId={id} laps={laps || []} />
 }
-
-export default Page

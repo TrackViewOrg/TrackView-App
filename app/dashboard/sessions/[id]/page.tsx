@@ -1,6 +1,6 @@
 import React from 'react'
 import { notFound, redirect } from 'next/navigation'
-import { SessionDetails } from '@/components/sessions/SessionDetails'
+import { SessionDetails } from '@/features/sessions/components/SessionDetails'
 import { getSessionById, getSessionLaps } from '@/lib/dashboard/session'
 
 export default async function Page({
