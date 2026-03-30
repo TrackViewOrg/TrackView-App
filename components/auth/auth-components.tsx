@@ -1,11 +1,12 @@
 'use client'
 
-import React, { JSX, useEffect, useMemo, useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import React, { JSX, KeyboardEvent, useEffect, useMemo, useState } from 'react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Control, FieldValues, Path } from 'react-hook-form'
+import Link from 'next/link'
 
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Button, type ButtonProps } from '@/components/ui/button'
 import {
   FormControl,
   FormField,
@@ -16,6 +17,7 @@ import {
 import ShootingStars from '@/components/StarBackground'
 import { cn } from '@/lib/utils'
 import Logo from '@/components/LogoAnimated'
+import { privacyRoute, termsRoute } from '@/lib/constants'
 
 // --- TYPES ---
 
@@ -24,6 +26,8 @@ interface BaseFieldProps<T extends FieldValues> {
   name: Path<T>
   label: string
   placeholder?: string
+  onEnterKey?: () => void
+  autoFocus?: boolean
 }
 
 interface PasswordFieldProps<T extends FieldValues> extends BaseFieldProps<T> {
@@ -142,7 +146,170 @@ export const calculatePasswordStrength = (password: string): number => {
   return score
 }
 
-// --- COMPONENTS ---
+// --- SHARED SUB-COMPONENTS ---
+
+const AUTH_FOOTER_ROW_CLASS =
+  'text-muted-foreground flex items-center justify-between text-sm'
+const AUTH_LINK_BUTTON_CLASS =
+  'group text-muted-foreground hover:text-foreground px-0 hover:bg-transparent'
+const AUTH_COMPACT_LINK_BUTTON_CLASS =
+  'group text-muted-foreground hover:text-foreground !m-0 !p-0 hover:bg-transparent'
+
+/**
+ * OAuth divider - the "OR" separator between OAuth buttons and the form
+ */
+export function OAuthDivider() {
+  return (
+    <div className="relative flex items-center gap-4">
+      <div className="bg-border h-px flex-grow" />
+      <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase select-none">
+        OR
+      </span>
+      <div className="bg-border h-px flex-grow" />
+    </div>
+  )
+}
+
+/**
+ * Error display for auth forms - consistent styling across all auth pages
+ */
+export function AuthErrorDisplay({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      aria-atomic="true"
+      className="text-destructive bg-destructive/10 rounded-md p-3 text-sm font-medium"
+    >
+      {message}
+    </div>
+  )
+}
+
+/**
+ * Submit button with loading state - consistent h-11 styling
+ */
+export function AuthSubmitButton({
+  children,
+  isLoading,
+  disabled,
+  loadingText,
+}: {
+  children: React.ReactNode
+  isLoading?: boolean
+  disabled?: boolean
+  loadingText?: string
+}) {
+  return (
+    <Button
+      type="submit"
+      variant="accent"
+      className="h-11 w-full text-base"
+      disabled={isLoading || disabled}
+      aria-busy={isLoading}
+    >
+      {isLoading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {loadingText ?? children}
+        </>
+      ) : (
+        children
+      )}
+    </Button>
+  )
+}
+
+type AuthLinkButtonProps = Omit<ButtonProps, 'variant'>
+
+export function AuthLinkButton({
+  asChild,
+  className,
+  type,
+  ...props
+}: AuthLinkButtonProps) {
+  return (
+    <Button
+      variant="link"
+      asChild={asChild}
+      type={asChild ? undefined : (type ?? 'button')}
+      className={cn(AUTH_LINK_BUTTON_CLASS, className)}
+      {...props}
+    />
+  )
+}
+
+export function AuthCompactLinkButton({
+  asChild,
+  className,
+  type,
+  ...props
+}: AuthLinkButtonProps) {
+  return (
+    <Button
+      variant="link"
+      asChild={asChild}
+      type={asChild ? undefined : (type ?? 'button')}
+      className={cn(AUTH_COMPACT_LINK_BUTTON_CLASS, className)}
+      {...props}
+    />
+  )
+}
+
+export function AuthFooterRow({
+  className,
+  ...props
+}: React.ComponentProps<'div'>) {
+  return <div className={cn(AUTH_FOOTER_ROW_CLASS, className)} {...props} />
+}
+
+/**
+ * Footer with Terms and Privacy links
+ */
+export function AuthLegalFooter({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'text-muted-foreground/50 flex w-full items-center justify-between text-xs',
+        className
+      )}
+    >
+      <Link
+        href={termsRoute}
+        className="hover:text-muted-foreground transition-colors"
+      >
+        Terms Of Service
+      </Link>
+      <Link
+        href={privacyRoute}
+        className="hover:text-muted-foreground transition-colors"
+      >
+        Privacy Policy
+      </Link>
+    </div>
+  )
+}
+
+/**
+ * Auth page header with title and subtitle
+ */
+export function AuthHeader({
+  title,
+  subtitle,
+}: {
+  title: string
+  subtitle: string
+}) {
+  return (
+    <header className="mb-8 space-y-2">
+      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+      <p className="text-muted-foreground text-sm">{subtitle}</p>
+    </header>
+  )
+}
+
+// --- LAYOUT COMPONENTS ---
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -198,7 +365,7 @@ export function AuthLayout({
       <ShootingStars />
       <Logo />
 
-      <section className="z-10 hidden h-full flex-col justify-center px-24 xl:flex xl:w-4/7 2xl:xl:w-5/7">
+      <section className="z-10 hidden h-full flex-col justify-center px-12 lg:px-24 xl:flex xl:w-4/7 2xl:xl:w-5/7">
         <div
           className={cn(
             'text-foreground max-w-3xl space-y-6 transition-opacity duration-700 select-none',
@@ -207,7 +374,7 @@ export function AuthLayout({
               : 'opacity-0'
           )}
         >
-          <blockquote className="font-serif text-8xl font-light">
+          <blockquote className="font-serif text-6xl font-light lg:text-8xl">
             {content.headline.text.map((part, i) => (
               <React.Fragment key={i}>{part}</React.Fragment>
             ))}
@@ -222,7 +389,7 @@ export function AuthLayout({
 
       <section
         className={cn(
-          'bg-background/80 z-10 flex h-full w-full flex-col overflow-y-auto px-8 py-12 backdrop-blur-sm xl:w-2/5 xl:px-20',
+          'bg-background/80 z-10 flex h-full w-full flex-col overflow-y-auto px-6 py-8 backdrop-blur-sm sm:px-8 sm:py-12 xl:w-2/5 xl:px-20',
           borderClass
         )}
       >
@@ -234,13 +401,24 @@ export function AuthLayout({
   )
 }
 
+// --- FORM FIELD COMPONENTS ---
+
 export function FormInputField<T extends FieldValues>({
   control,
   name,
   label,
   placeholder,
   type = 'text',
+  onEnterKey,
+  autoFocus,
 }: BaseFieldProps<T> & { type?: string }) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onEnterKey) {
+      e.preventDefault()
+      onEnterKey()
+    }
+  }
+
   return (
     <FormField
       control={control}
@@ -254,6 +432,8 @@ export function FormInputField<T extends FieldValues>({
               type={type}
               className="h-11"
               placeholder={placeholder}
+              onKeyDown={handleKeyDown}
+              autoFocus={autoFocus}
             />
           </FormControl>
           <FormMessage />
@@ -268,8 +448,17 @@ export function PasswordWithStrength<T extends FieldValues>({
   name,
   label,
   placeholder,
+  onEnterKey,
+  autoFocus,
 }: BaseFieldProps<T>) {
   const [showPassword, setShowPassword] = useState(false)
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onEnterKey) {
+      e.preventDefault()
+      onEnterKey()
+    }
+  }
 
   return (
     <FormField
@@ -287,6 +476,8 @@ export function PasswordWithStrength<T extends FieldValues>({
                   className="h-11"
                   type={showPassword ? 'text' : 'password'}
                   placeholder={placeholder}
+                  onKeyDown={handleKeyDown}
+                  autoFocus={autoFocus}
                 />
               </FormControl>
               <button
@@ -329,8 +520,18 @@ export function FormPasswordField<T extends FieldValues>({
   label,
   placeholder,
   forgotPasswordLink,
+  onEnterKey,
+  autoFocus,
 }: PasswordFieldProps<T>) {
   const [showPassword, setShowPassword] = useState(false)
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && onEnterKey) {
+      e.preventDefault()
+      onEnterKey()
+    }
+  }
+
   return (
     <FormField
       control={control}
@@ -348,6 +549,8 @@ export function FormPasswordField<T extends FieldValues>({
                 className="h-11"
                 type={showPassword ? 'text' : 'password'}
                 placeholder={placeholder}
+                onKeyDown={handleKeyDown}
+                autoFocus={autoFocus}
               />
             </FormControl>
             <button

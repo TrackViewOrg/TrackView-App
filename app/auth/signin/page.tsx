@@ -1,27 +1,28 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { CircleQuestionMark, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { CircleQuestionMark } from 'lucide-react'
 import { Form } from '@/components/ui/form'
 import {
   AuthLayout,
   FormInputField,
   FormPasswordField,
   GoogleButton,
+  OAuthDivider,
+  AuthErrorDisplay,
+  AuthSubmitButton,
+  AuthLegalFooter,
+  AuthHeader,
+  AuthFooterRow,
+  AuthCompactLinkButton,
 } from '@/components/auth/auth-components'
 import { handleGoogleLogin, signin } from '@/lib/auth/actions'
 import { SupportDialog } from '@/components/dashboard/SupportDialog'
-import {
-  forgotPasswordRoute,
-  privacyRoute,
-  signupRoute,
-  termsRoute,
-} from '@/lib/constants'
+import { forgotPasswordRoute, signupRoute } from '@/lib/constants'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -30,6 +31,8 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
@@ -38,13 +41,10 @@ export default function LoginPage() {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true)
 
-    // 1. Call the action and capture the returned object
     const result = await signin(values.email, values.password)
 
-    // 2. Check if the result exists and has an error string
     if (result?.error) {
       form.setError('root', {
-        // result.error is already the string message here
         message: result.error,
       })
       setIsLoading(false)
@@ -52,41 +52,46 @@ export default function LoginPage() {
     // If no error, the server action handles the redirect internally
   }
 
+  const focusPassword = () => {
+    // Focus the password field when Enter is pressed on email
+    const passwordInput = formRef.current?.querySelector<HTMLInputElement>(
+      'input[type="password"]'
+    )
+    passwordInput?.focus()
+  }
+
+  const submitForm = () => {
+    formRef.current?.requestSubmit()
+  }
+
   return (
     <AuthLayout>
-      <header className="mb-8 space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
-        <p className="text-muted-foreground text-sm">
-          Please login to your account
-        </p>
-      </header>
+      <AuthHeader
+        title="Welcome Back"
+        subtitle="Please login to your account"
+      />
 
-      <footer className="space-y-6">
+      <div className="space-y-6">
         <GoogleButton onClickAction={handleGoogleLogin}>
           Continue with Google
         </GoogleButton>
 
-        <div className="relative flex items-center gap-4">
-          <div className="bg-border h-px flex-grow" />
-          <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase select-none">
-            OR
-          </span>
-          <div className="bg-border h-px flex-grow" />
-        </div>
+        <OAuthDivider />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {form.formState.errors.root && (
-              <div className="text-destructive bg-destructive/10 rounded-md p-3 text-sm font-medium">
-                {form.formState.errors.root.message}
-              </div>
-            )}
+          <form
+            ref={formRef}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
+            <AuthErrorDisplay message={form.formState.errors.root?.message} />
 
             <FormInputField
               control={form.control}
               name="email"
               label="Email"
               placeholder="me@example.com"
+              onEnterKey={focusPassword}
             />
 
             <FormPasswordField
@@ -94,6 +99,7 @@ export default function LoginPage() {
               name="password"
               label="Password"
               placeholder="••••••••"
+              onEnterKey={submitForm}
               forgotPasswordLink={
                 <Link
                   href={forgotPasswordRoute}
@@ -104,33 +110,18 @@ export default function LoginPage() {
               }
             />
 
-            <Button
-              type="submit"
-              variant={'accent'}
-              className="h-11 w-full text-base"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
+            <AuthSubmitButton isLoading={isLoading}>Sign In</AuthSubmitButton>
           </form>
         </Form>
 
-        <footer
-          className={
-            'text-muted-foreground flex w-full items-center justify-between !px-0 text-center text-sm'
-          }
-        >
+        <AuthFooterRow className="w-full">
           <SupportDialog>
-            <Button
-              variant="link"
-              className="group text-muted-foreground hover:text-foreground !m-0 !p-0 hover:bg-transparent"
-            >
+            <AuthCompactLinkButton>
               <CircleQuestionMark />
               Request Support
-            </Button>
+            </AuthCompactLinkButton>
           </SupportDialog>
-          <span className="">
+          <span>
             Don&apos;t have an account?{' '}
             <Link
               href={signupRoute}
@@ -139,24 +130,10 @@ export default function LoginPage() {
               Sign up
             </Link>
           </span>
-        </footer>
-        <footer
-          className={
-            'text-muted-foreground/50 flex w-full items-center justify-between !px-0 text-center text-xs'
-          }
-        >
-          <span className="">
-            <Link href={termsRoute} className="">
-              Terms Of Service
-            </Link>
-          </span>
-          <span className="">
-            <Link href={privacyRoute} className="">
-              Privacy Policy
-            </Link>
-          </span>
-        </footer>
-      </footer>
+        </AuthFooterRow>
+
+        <AuthLegalFooter />
+      </div>
     </AuthLayout>
   )
 }

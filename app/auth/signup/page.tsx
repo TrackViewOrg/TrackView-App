@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import Link from 'next/link'
+import { CircleQuestionMark } from 'lucide-react'
+import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import {
   AuthLayout,
@@ -13,15 +15,18 @@ import {
   FormPasswordField,
   GoogleButton,
   PasswordWithStrength,
+  OAuthDivider,
+  AuthSubmitButton,
+  AuthLegalFooter,
+  AuthHeader,
+  AuthErrorDisplay,
+  AuthFooterRow,
+  AuthCompactLinkButton,
 } from '@/components/auth/auth-components'
-import Link from 'next/link'
 import { handleGoogleLogin, handleSignup } from '@/lib/auth/actions'
 import { SupportDialog } from '@/components/dashboard/SupportDialog'
-import { CircleQuestionMark } from 'lucide-react'
-import { privacyRoute, signinRoute, termsRoute } from '@/lib/constants'
-import { toast } from 'sonner'
+import { signinRoute } from '@/lib/constants'
 
-// 1. Schema reduced to essential inputs
 const signUpSchema = z
   .object({
     email: z.string().email('Please enter a valid email address'),
@@ -43,6 +48,7 @@ type SignUpFormValues = z.infer<typeof signUpSchema>
 
 export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -69,37 +75,43 @@ export default function SignUpPage() {
     }
   }
 
+  const focusField = (selector: string) => {
+    const input = formRef.current?.querySelector<HTMLInputElement>(selector)
+    input?.focus()
+  }
+
+  const submitForm = () => {
+    formRef.current?.requestSubmit()
+  }
+
   return (
     <AuthLayout>
-      <header className="font-archivo mb-8 space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Create an account
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Enter your details to get started
-        </p>
-      </header>
+      <AuthHeader
+        title="Create an account"
+        subtitle="Enter your details to get started"
+      />
 
       <div className="space-y-6">
         <GoogleButton onClickAction={handleGoogleLogin}>
           Sign up with Google
         </GoogleButton>
 
-        <div className="relative flex items-center gap-4">
-          <div className="bg-border h-px flex-grow" />
-          <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase select-none">
-            OR
-          </span>
-          <div className="bg-border h-px flex-grow" />
-        </div>
+        <OAuthDivider />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            ref={formRef}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
+            <AuthErrorDisplay message={form.formState.errors.root?.message} />
+
             <FormInputField
               control={form.control}
               name="email"
               label="Email"
               placeholder="me@example.com"
+              onEnterKey={() => focusField('input[name="password"]')}
             />
 
             <PasswordWithStrength
@@ -107,6 +119,7 @@ export default function SignUpPage() {
               name="password"
               label="Password"
               placeholder="Min. 8 characters with numbers"
+              onEnterKey={() => focusField('input[name="confirmPassword"]')}
             />
 
             <FormPasswordField
@@ -114,34 +127,26 @@ export default function SignUpPage() {
               name="confirmPassword"
               label="Confirm Password"
               placeholder="Repeat password"
+              onEnterKey={submitForm}
             />
 
-            <Button
-              type="submit"
-              variant={'accent'}
-              className="h-11 w-full"
-              disabled={isLoading}
+            <AuthSubmitButton
+              isLoading={isLoading}
+              loadingText="Creating account..."
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
-            </Button>
+              Create Account
+            </AuthSubmitButton>
           </form>
         </Form>
 
-        <footer
-          className={
-            'text-muted-foreground flex items-center justify-between text-center text-sm'
-          }
-        >
+        <AuthFooterRow>
           <SupportDialog>
-            <Button
-              variant="link"
-              className="group text-muted-foreground hover:text-foreground !m-0 !p-0 hover:bg-transparent"
-            >
+            <AuthCompactLinkButton>
               <CircleQuestionMark />
               Request Support
-            </Button>
+            </AuthCompactLinkButton>
           </SupportDialog>
-          <span className="">
+          <span>
             Already have an account?{' '}
             <Link
               href={signinRoute}
@@ -150,24 +155,9 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </span>
-        </footer>
+        </AuthFooterRow>
 
-        <footer
-          className={
-            'text-muted-foreground/50 flex w-full items-center justify-between !px-0 text-center text-xs'
-          }
-        >
-          <span className="">
-            <Link href={termsRoute} className="">
-              Terms Of Service
-            </Link>
-          </span>
-          <span className="">
-            <Link href={privacyRoute} className="">
-              Privacy Policy
-            </Link>
-          </span>
-        </footer>
+        <AuthLegalFooter />
       </div>
     </AuthLayout>
   )
