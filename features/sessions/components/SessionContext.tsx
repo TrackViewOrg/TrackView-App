@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useCallback, useContext, useState } from 'react'
+import { getNextComparisonSelection } from '@/lib/sessions/comparison'
 
 interface SessionContextType {
   selectedLapId: string | null
@@ -27,13 +28,39 @@ export function SessionProvider({
     initialReferenceLapId
   )
 
+  const handleSelectedLapChange = useCallback(
+    (id: string | null) => {
+      const nextLapId = getNextComparisonSelection(id, referenceLapId)
+
+      if (id !== null && nextLapId === null) {
+        return
+      }
+
+      setSelectedLapId(nextLapId)
+    },
+    [referenceLapId]
+  )
+
+  const handleReferenceLapChange = useCallback(
+    (id: string | null) => {
+      const nextLapId = getNextComparisonSelection(id, selectedLapId)
+
+      if (id !== null && nextLapId === null) {
+        return
+      }
+
+      setReferenceLapId(nextLapId)
+    },
+    [selectedLapId]
+  )
+
   return (
     <SessionContext.Provider
       value={{
         selectedLapId,
-        setSelectedLapId,
+        setSelectedLapId: handleSelectedLapChange,
         referenceLapId,
-        setReferenceLapId,
+        setReferenceLapId: handleReferenceLapChange,
       }}
     >
       {children}

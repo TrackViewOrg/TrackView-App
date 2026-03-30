@@ -4,6 +4,7 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { UserProvider } from '@/components/providers/user-provider'
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseConfig } from '@/lib/supabase/config'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import { SubscriptionOverlay } from '@/components/subscription-overlay'
@@ -59,6 +60,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const { url: supabaseUrl, anonKey: supabaseAnonKey } = getSupabaseConfig()
   const supabase = await createClient()
   const {
     data: { user },
@@ -80,6 +82,8 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       {/* Fix 2: Added instrumentSerif.variable to the class list */}
       <body
+        data-supabase-url={supabaseUrl}
+        data-supabase-anon-key={supabaseAnonKey}
         className={`${geistSans.variable} ${spaceMono.variable} ${archivo.variable} ${instrumentSerif.variable} font-archivo selection:text-background antialiased selection:bg-[#dff976]`}
       >
         <UserProvider initialUser={user} initialProfile={profile}>

@@ -160,6 +160,9 @@ export default function SessionDataGrid() {
     [isDeletingId]
   )
 
+  // TanStack Table exposes mutable helpers that React Compiler intentionally skips.
+  // This keeps the integration explicit without changing table behavior.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: sessions || [],
     columns,
@@ -185,7 +188,7 @@ export default function SessionDataGrid() {
   }
 
   const toggleSort = (id: string, desc: boolean) => {
-    setSorting((current) => {
+    setSorting(() => {
       if (isSortedBy(id, desc)) {
         return []
       }

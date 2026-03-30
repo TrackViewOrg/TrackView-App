@@ -1,11 +1,13 @@
 'use client'
-import React, { type JSX, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
+type TextShimmerElement = 'p' | 'span' | 'div'
+
 export type TextShimmerProps = {
   children: string
-  as?: React.ElementType
+  as?: TextShimmerElement
   className?: string
   duration?: number
   spread?: number
@@ -15,9 +17,11 @@ const MotionP = motion.create('p')
 const MotionSpan = motion.create('span')
 const MotionDiv = motion.create('div')
 
-// Cache for dynamically created motion components to avoid creation during render
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const motionCache = new Map<string, any>()
+const MOTION_COMPONENTS = {
+  p: MotionP,
+  span: MotionSpan,
+  div: MotionDiv,
+} satisfies Record<TextShimmerElement, typeof MotionP>
 
 function TextShimmerComponent({
   children,
@@ -26,40 +30,13 @@ function TextShimmerComponent({
   duration = 2,
   spread = 2,
 }: TextShimmerProps) {
-  const MotionComponent = useMemo(() => {
-    if (Component === 'p') return MotionP
-    if (Component === 'span') return MotionSpan
-    if (Component === 'div') return MotionDiv
-
-    if (typeof Component !== 'string') {
-      // For custom components, we still need to wrap them with motion.
-      // To avoid creating them during render, we can use the cache if possible,
-      // but custom components (functions/classes) as keys in a Map might be tricky if they are recreated.
-      // However, usually these are stable references.
-      // eslint-disable-next-line
-      if (!motionCache.has(Component as any)) {
-        // eslint-disable-next-line
-        motionCache.set(Component as any, motion.create(Component as any))
-      }
-      // eslint-disable-next-line
-      return motionCache.get(Component as any)
-    }
-
-    if (!motionCache.has(Component)) {
-      motionCache.set(
-        Component,
-        motion.create(Component as keyof JSX.IntrinsicElements)
-      )
-    }
-    return motionCache.get(Component)
-  }, [Component])
+  const MotionComponent = MOTION_COMPONENTS[Component]
 
   const dynamicSpread = useMemo(() => {
     return children.length * spread
   }, [children, spread])
 
   return (
-    // eslint-disable-next-line
     <MotionComponent
       className={cn(
         'relative inline-block bg-[length:250%_100%,auto] bg-clip-text',

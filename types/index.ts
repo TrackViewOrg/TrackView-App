@@ -1,6 +1,24 @@
 import { User } from '@supabase/supabase-js'
 
 export type PlanType = 'DEFAULT' | 'PLUS' | 'PRO'
+export type JsonPrimitive = string | number | boolean | null
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[]
+
+export interface JsonObject {
+  [key: string]: JsonValue
+}
+
+export interface NamedOption {
+  id: string
+  display_name: string
+}
+
+export interface TrackSection {
+  startPct: number | string
+  endPct: number | string
+}
+
+export type TrackSectionsMap = Record<string, TrackSection>
 
 export interface Profile {
   id: string
@@ -22,7 +40,7 @@ export interface Game {
   id: string
   name: string
   image_url: string | null
-  more_props: any
+  more_props: JsonValue | null
   created_at: string
 }
 
@@ -31,7 +49,7 @@ export interface Car {
   internal_name: string
   display_name: string
   car_image: string | null
-  more_props: any
+  more_props: JsonValue | null
   created_at: string
 }
 
@@ -41,9 +59,9 @@ export interface Track {
   display_name: string
   track_flag: string | null
   created_at: string
-  sectors: any
-  sections: any
-  drs_zones: any
+  sectors: JsonValue | null
+  sections: TrackSectionsMap | null
+  drs_zones: JsonValue | null
 }
 
 export interface Session {
@@ -55,7 +73,7 @@ export interface Session {
   best_lap_time: number
   gap_to_pb: number
   total_laps: number
-  weather_data: any // Using any for jsonb as structure isn't defined yet
+  weather_data: JsonValue | null
   created_at: string
   bookmarked: boolean
   game?: Game

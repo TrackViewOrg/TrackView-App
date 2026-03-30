@@ -14,11 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useSubscriptionModal } from '@/lib/hooks/subscription'
 
 function Topbar() {
-  const subscriptionModal = useSubscriptionModal()
-
   return (
     <div
       className={
@@ -26,17 +23,6 @@ function Topbar() {
       }
     >
       <TopbarBreadcrumb />
-
-      {/*<Button*/}
-      {/*  size={'sm'}*/}
-      {/*  onClick={() => subscriptionModal.open()}*/}
-      {/*  className={*/}
-      {/*    'group hover:text-background flex h-7 gap-2 bg-[#dff976]/40 px-3 text-xs font-bold text-[#dff976] transition-all duration-400 hover:bg-[#dff976]'*/}
-      {/*  }*/}
-      {/*>*/}
-      {/*  <ZapIcon className={'group-hover h-3.5 w-3.5'} />*/}
-      {/*  UPGRADE TO PLUS*/}
-      {/*</Button>*/}
 
       <div className={'flex items-center gap-1'}>
         <Tooltip delayDuration={400}>

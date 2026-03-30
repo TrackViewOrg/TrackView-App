@@ -17,8 +17,6 @@ const SegmentedBar = React.forwardRef<
       {validChildren.map((child, index) => {
         if (!React.isValidElement(child)) return null
 
-        // FIX: Cast child to a ReactElement with specific props
-        // This solves both the "no-explicit-any" and "unknown props" errors
         const element = child as React.ReactElement<{ className?: string }>
 
         const isFirst = index === 0
@@ -30,7 +28,6 @@ const SegmentedBar = React.forwardRef<
             isFirst && 'rounded-l-sm border',
             !isFirst && 'border-y border-r',
             isLast && 'rounded-r-sm',
-            // FIX: Now TypeScript knows 'className' exists on 'element.props'
             element.props.className
           ),
         })

@@ -2,24 +2,17 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { GeoPermissibleObjects } from 'd3'
 import { usePathname, useRouter } from 'next/navigation'
 import { getTrackInternalName } from '@/lib/dashboard/track'
 import { Loader2 } from 'lucide-react'
 import { useSession } from '@/features/sessions/components/SessionContext'
 import { Lap } from '@/features/sessions/components/LapTable'
+import { TrackSectionsMap } from '@/types'
 
 interface TrackMapProps {
   sessionId: string
   laps: Lap[]
-}
-
-interface TrackSection {
-  startPct: number | string
-  endPct: number | string
-}
-
-interface TrackSections {
-  [key: string]: TrackSection
 }
 
 interface SectionData {
@@ -38,12 +31,8 @@ interface SimulationNode extends d3.SimulationNodeDatum {
   data: SectionData
 }
 
-// Basic GeoJSON type definition
-interface GeoJSONData {
-  type: string
-  features: unknown[]
+type GeoJSONData = GeoPermissibleObjects & {
   bbox?: number[]
-  [key: string]: unknown
 }
 
 export function TrackMap({ sessionId, laps }: TrackMapProps) {
@@ -54,7 +43,7 @@ export function TrackMap({ sessionId, laps }: TrackMapProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [geoJson, setGeoJson] = useState<GeoJSONData | null>(null)
-  const [sections, setSections] = useState<TrackSections | null>(null)
+  const [sections, setSections] = useState<TrackSectionsMap | null>(null)
 
   const { selectedLapId, referenceLapId } = useSession()
 
@@ -127,12 +116,14 @@ export function TrackMap({ sessionId, laps }: TrackMapProps) {
         }
 
         if (trackSections) {
-          setSections(trackSections as TrackSections)
+          setSections(trackSections)
         }
 
-        const baseUrl = `https://cdn.jsdelivr.net/gh/TrackViewOrg/TrackView-Data@main/Tracks/${internalName}/center_line.geojson`
+        const trackMapUrl = `https://cdn.jsdelivr.net/gh/TrackViewOrg/TrackView-Data@main/Tracks/${encodeURIComponent(
+          internalName
+        )}/center_line.geojson`
 
-        const response = await fetch(baseUrl)
+        const response = await fetch(trackMapUrl, { cache: 'force-cache' })
         if (!response.ok) {
           if (mounted) {
             setError(`Failed to fetch: ${response.statusText}`)
@@ -141,7 +132,7 @@ export function TrackMap({ sessionId, laps }: TrackMapProps) {
           return
         }
 
-        const data = await response.json()
+        const data = (await response.json()) as GeoJSONData
         if (mounted) {
           setGeoJson(data)
           setLoading(false)
@@ -205,13 +196,12 @@ export function TrackMap({ sessionId, laps }: TrackMapProps) {
 
       try {
         const PADDING = 50
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const projection = d3.geoMercator().fitExtent(
           [
             [PADDING, PADDING],
             [width - PADDING, height - PADDING],
           ],
-          geoJson as any
+          geoJson
         )
         const pathGenerator = d3.geoPath().projection(projection)
 
@@ -345,10 +335,9 @@ export function TrackMap({ sessionId, laps }: TrackMapProps) {
               : '#71717a'
 
             // --- Draw Leader Line (if moved significantly) ---
-            const dist = Math.sqrt(
-              Math.pow(node.x - node.idealX, 2) +
-                Math.pow(node.y - node.idealY, 2)
-            )
+            const deltaX = node.x - node.idealX
+            const deltaY = node.y - node.idealY
+            const dist = Math.hypot(deltaX, deltaY)
 
             if (dist > 5) {
               svg

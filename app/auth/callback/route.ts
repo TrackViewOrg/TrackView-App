@@ -6,11 +6,12 @@ import {
   updatePasswordRoute,
   verifyMfaRoute,
 } from '@/lib/constants'
+import { sanitizeAppPath } from '@/lib/utils/url'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? dashRoute
+  const next = searchParams.get('next')
 
   if (code) {
     const supabase = await createClient()
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      const safeNext = next.startsWith('/') ? next : dashRoute
+      const safeNext = sanitizeAppPath(next, dashRoute)
 
       // Create the redirect response immediately
       const response = NextResponse.redirect(`${origin}${safeNext}`)
@@ -36,7 +37,15 @@ export async function GET(request: Request) {
       }
 
       // Handle MFA check while preserving the 'next' destination
-      const { data: mfaData } = await supabase.auth.mfa.listFactors()
+      const { data: mfaData, error: mfaError } =
+        await supabase.auth.mfa.listFactors()
+
+      if (mfaError) {
+        return NextResponse.redirect(
+          `${origin}${signinRoute}?error=Unable to verify multi-factor authentication`
+        )
+      }
+
       const hasVerifiedTotp = mfaData?.all.some(
         (factor) =>
           factor.status === 'verified' && factor.factor_type === 'totp'

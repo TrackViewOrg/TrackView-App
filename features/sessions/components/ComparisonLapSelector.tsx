@@ -16,12 +16,14 @@ import {
 } from '@/components/ui/popover'
 import { Lap } from '@/features/sessions/components/LapTable'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { getSelectableComparisonLaps } from '@/lib/sessions/comparison'
 
 interface ComparisonLapSelectorProps {
   laps: Lap[]
   selectedLapId: string | null
   onSelectLap: (lapId: string) => void
   label: string
+  excludedLapId?: string | null
   className?: string
 }
 
@@ -30,10 +32,13 @@ function ComparisonLapSelector({
   selectedLapId,
   onSelectLap,
   label,
+  excludedLapId = null,
   className,
 }: ComparisonLapSelectorProps) {
   const [open, setOpen] = useState(false)
-  const selectedLap = laps.find((l) => l.id === selectedLapId)
+  const availableLaps = getSelectableComparisonLaps(laps, excludedLapId)
+  const selectedLap = availableLaps.find((lap) => lap.id === selectedLapId)
+  const isDisabled = availableLaps.length === 0
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,6 +48,7 @@ function ComparisonLapSelector({
           size={'xs'}
           role="combobox"
           aria-expanded={open}
+          disabled={isDisabled}
           className={cn(
             'text-muted-foreground/50 hover:text-muted-foreground h-auto w-auto gap-1 rounded-none border-none bg-transparent !px-1 py-1 !pr-3',
             className
@@ -52,7 +58,11 @@ function ComparisonLapSelector({
           <div className={'flex items-center gap-1.5'}>
             <span className="text-xs uppercase">{label}:</span>
             <span className={'text-muted-foreground text-xs uppercase'}>
-              {selectedLap ? `Lap_${selectedLap.lap_number}` : 'Select'}
+              {selectedLap
+                ? `Lap_${selectedLap.lap_number}`
+                : isDisabled
+                  ? 'Unavailable'
+                  : 'Select'}
             </span>
           </div>
         </Button>
@@ -63,10 +73,10 @@ function ComparisonLapSelector({
       >
         <Command>
           <CommandList className="max-h-full overflow-hidden">
-            <CommandEmpty>No lap found.</CommandEmpty>
+            <CommandEmpty>No comparison lap available.</CommandEmpty>
             <CommandGroup className={'overflow-hidden p-0.5'}>
               <ScrollArea className={'h-60'}>
-                {laps.map((lap) => (
+                {availableLaps.map((lap) => (
                   <CommandItem
                     key={lap.id}
                     value={`Lap ${lap.lap_number}`}

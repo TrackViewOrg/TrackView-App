@@ -2,6 +2,42 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+async function getAuthenticatedUserId() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    return { error: 'User not authenticated' as const }
+  }
+
+  return { supabase, userId: user.id }
+}
+
+async function ensureOwnedSession(sessionId: string) {
+  const auth = await getAuthenticatedUserId()
+
+  if ('error' in auth) {
+    return { error: auth.error }
+  }
+
+  const { supabase, userId } = auth
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, user_id, track_id')
+    .eq('id', sessionId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error || !data) {
+    return { error: 'Session not found' as const }
+  }
+
+  return { supabase, userId, session: data }
+}
+
 /**
  * Fetches all racing sessions for the currently authenticated user.
  * Includes related data for game, car, and track.
@@ -9,16 +45,13 @@ import { createClient } from '@/lib/supabase/server'
  * @returns Object containing session data or an error message.
  */
 export async function getUserSessions() {
-  const supabase = await createClient()
+  const auth = await getAuthenticatedUserId()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'User not authenticated' }
+  if ('error' in auth) {
+    return { error: auth.error }
   }
 
+  const { supabase, userId } = auth
   const { data, error } = await supabase
     .from('sessions')
     .select(
@@ -29,7 +62,7 @@ export async function getUserSessions() {
       track:tracks (*)
     `
     )
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -47,12 +80,18 @@ export async function getUserSessions() {
  * @returns Object containing session data or an error message.
  */
 export async function getSessionById(sessionId: string) {
-  const supabase = await createClient()
+  const ownedSession = await ensureOwnedSession(sessionId)
 
+  if ('error' in ownedSession) {
+    return { error: ownedSession.error }
+  }
+
+  const { supabase, userId } = ownedSession
   const { data, error } = await supabase
     .from('sessions')
     .select('*')
     .eq('id', sessionId)
+    .eq('user_id', userId)
     .single()
 
   if (error) {
@@ -69,8 +108,13 @@ export async function getSessionById(sessionId: string) {
  * @returns Object containing laps data or an error message.
  */
 export async function getSessionLaps(sessionId: string) {
-  const supabase = await createClient()
+  const ownedSession = await ensureOwnedSession(sessionId)
 
+  if ('error' in ownedSession) {
+    return { error: ownedSession.error }
+  }
+
+  const { supabase } = ownedSession
   const { data, error } = await supabase
     .from('laps')
     .select('*')
@@ -91,21 +135,19 @@ export async function getSessionLaps(sessionId: string) {
  * @returns Success object or error object.
  */
 export async function deleteSession(sessionId: string) {
-  const supabase = await createClient()
+  const ownedSession = await ensureOwnedSession(sessionId)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'User not authenticated' }
+  if ('error' in ownedSession) {
+    return { error: ownedSession.error }
   }
+
+  const { supabase, userId } = ownedSession
 
   // 1. Delete from storage
   // The folder structure is assumed to be: {user_id}/{session_id}/...
   const { data: list, error: listError } = await supabase.storage
     .from('telemetry')
-    .list(`${user.id}/${sessionId}`)
+    .list(`${userId}/${sessionId}`)
 
   if (listError) {
     console.error('Error listing files for deletion:', listError)
@@ -115,7 +157,9 @@ export async function deleteSession(sessionId: string) {
   }
 
   if (list && list.length > 0) {
-    const filesToRemove = list.map((x) => `${user.id}/${sessionId}/${x.name}`)
+    const filesToRemove = list.map(
+      (item) => `${userId}/${sessionId}/${item.name}`
+    )
     const { error: removeError } = await supabase.storage
       .from('telemetry')
       .remove(filesToRemove)
@@ -131,7 +175,7 @@ export async function deleteSession(sessionId: string) {
     .from('sessions')
     .delete()
     .eq('id', sessionId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (deleteError) {
     console.error('Error deleting session record:', deleteError)
@@ -152,21 +196,18 @@ export async function toggleSessionBookmark(
   sessionId: string,
   bookmarked: boolean
 ) {
-  const supabase = await createClient()
+  const ownedSession = await ensureOwnedSession(sessionId)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'User not authenticated' }
+  if ('error' in ownedSession) {
+    return { error: ownedSession.error }
   }
 
+  const { supabase, userId } = ownedSession
   const { error } = await supabase
     .from('sessions')
     .update({ bookmarked })
     .eq('id', sessionId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) {
     console.error('Error toggling bookmark:', error)

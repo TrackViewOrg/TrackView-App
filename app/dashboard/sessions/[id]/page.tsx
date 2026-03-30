@@ -9,12 +9,14 @@ export default async function Page({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { data: session, error: sessionError } = await getSessionById(id)
+  const [
+    { data: session, error: sessionError },
+    { data: laps, error: lapsError },
+  ] = await Promise.all([getSessionById(id), getSessionLaps(id)])
+
   if (sessionError || !session) {
     notFound()
   }
-
-  const { data: laps, error: lapsError } = await getSessionLaps(id)
 
   if (lapsError) {
     console.error('Error fetching laps:', lapsError)

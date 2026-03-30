@@ -12,6 +12,7 @@ import {
   verifyMfaRoute,
 } from '@/lib/constants'
 import { cookies } from 'next/headers'
+import { getSiteOrigin, sanitizeAppPath } from '@/lib/utils/url'
 
 /**
  * Handles user sign-in with email and password.
@@ -63,7 +64,7 @@ export async function signin(email: string, password: string) {
  */
 export const handleGoogleLogin = async () => {
   const supabase = await createClient()
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const origin = getSiteOrigin()
 
   // FIX: Append `?next=${dashRoute}` to the redirectTo URL
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -99,7 +100,7 @@ export async function handleSignup(formData: {
   username: string
 }) {
   const supabase = await createClient()
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const origin = getSiteOrigin()
 
   const { error } = await supabase.auth.signUp({
     email: formData.email,
@@ -144,7 +145,7 @@ export async function verifyOtpForLogin(formData: FormData) {
 
   // 1. CATCH THE BATON: Get the 'next' URL that we passed from the frontend
   // If it's missing, ONLY THEN do we fall back to dashRoute
-  const nextUrl = (formData.get('next') as string) || dashRoute
+  const nextUrl = formData.get('next') as string | null
 
   if (!code) {
     return { error: 'Code is required' }
@@ -181,7 +182,7 @@ export async function verifyOtpForLogin(formData: FormData) {
   revalidatePath('/', 'layout')
 
   // Security check: ensure it starts with / to prevent open redirects
-  const finalDestination = nextUrl.startsWith('/') ? nextUrl : dashRoute
+  const finalDestination = sanitizeAppPath(nextUrl, dashRoute)
 
   // If we are going to update-password, we need to set the recovery cookie
   if (finalDestination === updatePasswordRoute) {
@@ -209,7 +210,7 @@ export const handleForgotPassword = async (email: string) => {
   const supabase = await createClient()
 
   // We send them to the callback first to establish the session
-  const callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${callbackRoute}`
+  const callbackUrl = `${getSiteOrigin()}${callbackRoute}`
 
   // 2. Encode the target path so query params (?update_password=true) stick together
   const targetPath = updatePasswordRoute

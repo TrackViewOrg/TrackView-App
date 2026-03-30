@@ -37,12 +37,14 @@ const ERROR_QUOTES = [
 export default function NotFoundPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const [quote, setQuote] = useState<(typeof ERROR_QUOTES)[0] | null>(null)
+  const [quote] = useState(
+    () => ERROR_QUOTES[Math.floor(Math.random() * ERROR_QUOTES.length)]
+  )
 
   useEffect(() => {
-    // eslint-disable-next-line
-    setQuote(ERROR_QUOTES[Math.floor(Math.random() * ERROR_QUOTES.length)])
-    setMounted(true)
+    const frame = requestAnimationFrame(() => setMounted(true))
+
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   return (
@@ -65,7 +67,7 @@ export default function NotFoundPage() {
 
         {/* Big Impact Quote */}
         <blockquote className="text-foreground mb-5 max-w-5/6 font-serif text-5xl leading-tight font-light tracking-tight select-none md:text-7xl">
-          {quote?.text.map((part, i) => (
+          {quote.text.map((part, i) => (
             <React.Fragment key={i}>{part}</React.Fragment>
           ))}
         </blockquote>

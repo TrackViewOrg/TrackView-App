@@ -9,6 +9,7 @@ import {
 } from '@/features/sessions/components/SessionContext'
 import ComparisonLapSelector from '@/features/sessions/components/ComparisonLapSelector'
 import { TrackMap } from '@/features/sessions/components/TrackMap'
+import { getInitialComparisonLapIds } from '@/lib/sessions/comparison'
 
 interface SessionDetailsProps {
   sessionId: string
@@ -44,6 +45,7 @@ function SessionControls({ laps }: { laps: Lap[] }) {
             selectedLapId={selectedLapId}
             onSelectLap={setSelectedLapId}
             label="Comp"
+            excludedLapId={referenceLapId}
           />
         </div>
 
@@ -53,6 +55,7 @@ function SessionControls({ laps }: { laps: Lap[] }) {
             selectedLapId={referenceLapId}
             onSelectLap={setReferenceLapId}
             label="REF"
+            excludedLapId={selectedLapId}
           />
         </div>
       </SegmentedBar>
@@ -61,17 +64,10 @@ function SessionControls({ laps }: { laps: Lap[] }) {
 }
 
 export function SessionDetails({ sessionId, laps }: SessionDetailsProps) {
-  // Determine initial reference lap (e.g., fastest lap or first lap)
-  const fastestLap = laps.reduce((prev, current) => {
-    return prev.lap_time < current.lap_time ? prev : current
-  }, laps[0])
-
-  const initialReferenceLapId = fastestLap
-    ? fastestLap.id
-    : laps.length > 0
-      ? laps[0].id
-      : null
-  const initialSelectedLapId = laps.length > 0 ? laps[0].id : null
+  const {
+    selectedLapId: initialSelectedLapId,
+    referenceLapId: initialReferenceLapId,
+  } = getInitialComparisonLapIds(laps, laps[0]?.id ?? null, null)
 
   return (
     <SessionProvider

@@ -1,15 +1,25 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { TrackSectionsMap } from '@/types'
 
 export async function getTrackInternalName(sessionId: string) {
   const supabase = await createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: 'User not authenticated' }
+  }
 
   // 1. Get the session to find the track_id
   const { data: session, error: sessionError } = await supabase
     .from('sessions')
     .select('track_id')
     .eq('id', sessionId)
+    .eq('user_id', user.id)
     .single()
 
   if (sessionError || !session) {
@@ -33,5 +43,8 @@ export async function getTrackInternalName(sessionId: string) {
     return { error: trackError?.message || 'Track not found' }
   }
 
-  return { internalName: track.internal_name, sections: track.sections }
+  return {
+    internalName: track.internal_name,
+    sections: track.sections as TrackSectionsMap | null,
+  }
 }

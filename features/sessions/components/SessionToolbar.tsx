@@ -18,14 +18,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Session } from '@/types'
+import { NamedOption, Session } from '@/types'
 
 interface SessionToolbarProps {
   table: Table<Session>
   sorting: SortingState
   columnFilters: ColumnFiltersState
-  uniqueTracks: any[]
-  uniqueCars: any[]
+  uniqueTracks: NamedOption[]
+  uniqueCars: NamedOption[]
   isSortedBy: (id: string, desc: boolean) => boolean
   toggleSort: (id: string, desc: boolean) => void
   resetAll: () => void

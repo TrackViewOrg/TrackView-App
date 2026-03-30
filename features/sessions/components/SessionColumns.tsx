@@ -23,8 +23,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
+import { CarThumbnail } from '@/components/sessions/CarThumbnail'
 import { Session } from '@/types'
-import { formatLapTime, getShortTimeAgo } from '@/features/sessions/components/utils'
+import {
+  formatLapTime,
+  getShortTimeAgo,
+} from '@/features/sessions/components/utils'
 
 interface SessionColumnsProps {
   isDeletingId: string | null
@@ -89,16 +93,7 @@ export const getColumns = ({
       return (
         <div className="flex items-center gap-4">
           {carImage && (
-            <div className={'w-16 flex-shrink-0 overflow-hidden rounded-[4px]'}>
-              <img
-                src={carImage}
-                alt={'Car'}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
-            </div>
+            <CarThumbnail src={carImage} alt={`${carName} thumbnail`} />
           )}
           <div className={'flex flex-col'}>
             <span>{carName}</span>
